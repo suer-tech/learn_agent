@@ -106,13 +106,39 @@ const DISPATCHER_W = 160;
 const DISPATCHER_H = 50;
 const CARD_Y = 230;
 const CARD_W = 110;
-const CARD_H = 65;
+const CARD_H = 78;
 const CARD_GAP = 20;
+const DESC_MAX_CHARS = 18;
+const DESC_MAX_LINES = 2;
 
 function getCardX(index: number, toolCount: number): number {
   const totalWidth = toolCount * CARD_W + (toolCount - 1) * CARD_GAP;
   const startX = (SVG_WIDTH - totalWidth) / 2;
   return startX + index * (CARD_W + CARD_GAP) + CARD_W / 2;
+}
+
+function wrapDesc(text: string, maxChars: number, maxLines: number): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+      if (lines.length >= maxLines) break;
+    }
+  }
+  if (current && lines.length < maxLines) lines.push(current);
+  if (lines.length === maxLines) {
+    const last = lines[maxLines - 1];
+    if (last.length > maxChars) {
+      lines[maxLines - 1] = last.slice(0, maxChars - 1) + "…";
+    }
+  }
+  return lines;
 }
 
 export default function ToolDispatch({ title }: { title?: string }) {
@@ -327,18 +353,30 @@ export default function ToolDispatch({ title }: { title?: string }) {
                 >
                   {tool.name}
                 </motion.text>
-                <motion.text
-                  x={cardX}
-                  y={CARD_Y + 12}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={8}
-                  fontFamily="sans-serif"
-                  animate={{ fill: isActive ? "rgba(255,255,255,0.8)" : palette.labelFill }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {tool.desc}
-                </motion.text>
+                {(() => {
+                  const lines = wrapDesc(tool.desc, DESC_MAX_CHARS, DESC_MAX_LINES);
+                  const lineHeight = 10;
+                  const blockHeight = (lines.length - 1) * lineHeight;
+                  const firstY = CARD_Y + 10 - blockHeight / 2;
+                  return (
+                    <motion.text
+                      x={cardX}
+                      y={firstY}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize={8}
+                      fontFamily="sans-serif"
+                      animate={{ fill: isActive ? "rgba(255,255,255,0.8)" : palette.labelFill }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      {lines.map((line, idx) => (
+                        <tspan key={idx} x={cardX} dy={idx === 0 ? 0 : lineHeight}>
+                          {line}
+                        </tspan>
+                      ))}
+                    </motion.text>
+                  );
+                })()}
               </g>
             );
           })}
