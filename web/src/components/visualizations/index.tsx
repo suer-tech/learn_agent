@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, X } from "lucide-react";
 import { useTranslations } from "@/lib/i18n";
@@ -26,6 +26,76 @@ const visualizations: Record<
 const fallback = (
   <div className="min-h-[500px] animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
 );
+
+function FullscreenContent({
+  Component,
+  title,
+}: {
+  Component: React.LazyExoticComponent<React.ComponentType<{ title?: string }>>;
+  title: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [ready, setReady] = useState(false);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const inner = innerRef.current;
+    if (!container || !inner) return;
+
+    const compute = () => {
+      // Measure natural (un-transformed) size by reading inner getBoundingClientRect
+      // divided by current scale, so the math is stable across re-runs.
+      const rect = inner.getBoundingClientRect();
+      const currentScale = scale || 1;
+      const naturalH = rect.height / currentScale;
+      const naturalW = rect.width / currentScale;
+      const availH = container.clientHeight;
+      const availW = container.clientWidth;
+      if (naturalH <= 0 || naturalW <= 0 || availH <= 0 || availW <= 0) return;
+      const next = Math.min(availH / naturalH, availW / naturalW, 1);
+      setScale((prev) => (Math.abs(prev - next) > 0.005 ? next : prev));
+      setReady(true);
+    };
+
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(container);
+    ro.observe(inner);
+    // Recompute after async children (lazy-loaded SVG, fonts) settle
+    const t = setTimeout(compute, 60);
+    const t2 = setTimeout(compute, 300);
+    return () => {
+      ro.disconnect();
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
+  }, [scale]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="flex h-full w-full items-center justify-center overflow-hidden"
+    >
+      <div
+        ref={innerRef}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
+          width: "100%",
+          maxWidth: 1280,
+          opacity: ready ? 1 : 0,
+          transition: "opacity 120ms ease-out",
+        }}
+      >
+        <Suspense fallback={fallback}>
+          <Component title={title} />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
 
 export function SessionVisualization({ version }: { version: string }) {
   const t = useTranslations("viz");
@@ -84,7 +154,7 @@ export function SessionVisualization({ version }: { version: string }) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.97, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="relative flex h-full w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+              className="relative flex h-full w-full max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -96,10 +166,8 @@ export function SessionVisualization({ version }: { version: string }) {
               >
                 <X size={18} />
               </button>
-              <div className="flex-1 overflow-auto px-6 py-6 sm:px-10 sm:py-8">
-                <Suspense fallback={fallback}>
-                  <Component title={t(version)} />
-                </Suspense>
+              <div className="flex-1 px-6 pb-6 pt-12 sm:px-10 sm:pb-8 sm:pt-12">
+                <FullscreenContent Component={Component} title={t(version)} />
               </div>
             </motion.div>
           </motion.div>
