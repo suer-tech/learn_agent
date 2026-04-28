@@ -104,7 +104,7 @@ if len(messages) <= 3:
 ## Попробуй
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s11_autonomous_agents.py
 ```
 

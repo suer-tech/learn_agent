@@ -76,7 +76,7 @@ for block in response.content:
 ## Попробуйте
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s02_tool_use.py
 ```
 

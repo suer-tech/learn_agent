@@ -82,7 +82,7 @@ def agent_loop(messages: list):
 ## Попробуй
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s08_background_tasks.py
 ```
 

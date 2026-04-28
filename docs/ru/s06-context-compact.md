@@ -87,7 +87,7 @@ def agent_loop(messages: list):
 ## Попробуйте
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s06_context_compact.py
 ```
 

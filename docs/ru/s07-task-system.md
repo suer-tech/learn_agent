@@ -91,7 +91,7 @@ TOOL_HANDLERS = {
 ## Попробуй
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s07_task_system.py
 ```
 

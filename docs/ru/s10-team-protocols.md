@@ -75,7 +75,7 @@ def handle_plan_review(request_id, approve, feedback=""):
 ## Попробуй
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s10_team_protocols.py
 ```
 

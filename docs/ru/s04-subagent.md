@@ -73,7 +73,7 @@ def run_subagent(prompt: str) -> str:
 ## Попробуйте
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s04_subagent.py
 ```
 

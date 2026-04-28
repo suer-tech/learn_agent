@@ -231,8 +231,8 @@ def agent_loop(messages):
 ## Быстрый старт
 
 ```sh
-git clone https://github.com/shareAI-lab/learn-claude-code
-cd learn-claude-code
+git clone https://github.com/suer-tech/learn_agent.git
+cd learn_agent
 pip install -r requirements.txt
 cp .env.example .env   # Edit .env with your ANTHROPIC_API_KEY
 
@@ -286,7 +286,7 @@ s08  Background Tasks        [6]     s10  Team Protocols          [12]
 ## Архитектура
 
 ```
-learn-claude-code/
+learn_agent/
 |
 |-- agents/                        # Python reference implementations (s01-s12 + s_full capstone)
 |-- docs/                          # Mental-model-first documentation (3 languages)

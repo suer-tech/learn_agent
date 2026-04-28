@@ -92,7 +92,7 @@ def remove(self, name, force=False, complete_task=False):
 ## Попробуй
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s12_worktree_task_isolation.py
 ```
 

@@ -79,7 +79,7 @@ TOOL_HANDLERS = {
 ## Попробуйте
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s05_skill_loading.py
 ```
 

@@ -95,7 +95,7 @@ def agent_loop(query):
 ## Попробуйте
 
 ```sh
-cd learn-claude-code
+cd learn_agent
 python agents/s01_agent_loop.py
 ```
 
