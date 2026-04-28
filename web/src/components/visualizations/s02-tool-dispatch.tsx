@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useSvgPalette } from "@/hooks/useDarkMode";
+import { useLocale } from "@/lib/i18n";
 
 // -- Tool definitions --
 
@@ -16,7 +17,7 @@ interface ToolDef {
   darkActiveColor: string;
 }
 
-const TOOLS: ToolDef[] = [
+const TOOLS_EN: ToolDef[] = [
   {
     name: "bash",
     desc: "Execute shell commands",
@@ -51,6 +52,16 @@ const TOOLS: ToolDef[] = [
   },
 ];
 
+const TOOLS_RU: ToolDef[] = [
+  { ...TOOLS_EN[0], desc: "Выполнить shell-команду" },
+  { ...TOOLS_EN[1], desc: "Прочитать содержимое файла" },
+  { ...TOOLS_EN[2], desc: "Создать или перезаписать файл" },
+  { ...TOOLS_EN[3], desc: "Точечная правка файла" },
+];
+
+const TOOLS_ZH: ToolDef[] = TOOLS_EN;
+const TOOLS_JA: ToolDef[] = TOOLS_EN;
+
 // Per-step: which tool index is active (-1 = none, 4 = all)
 const ACTIVE_TOOL_PER_STEP: number[] = [-1, 0, 1, 2, 3, 4];
 
@@ -65,7 +76,7 @@ const REQUEST_PER_STEP: (string | null)[] = [
 ];
 
 // Step annotations
-const STEP_INFO = [
+const STEP_INFO_EN = [
   { title: "The Dispatch Map", desc: "A dictionary maps tool names to handler functions. The loop code never changes." },
   { title: "Route: bash", desc: "tool_call.name -> handlers['bash'](input). Name-based routing." },
   { title: "Route: read_file", desc: "Same pattern, different handler. Validate input, execute, return result." },
@@ -73,6 +84,18 @@ const STEP_INFO = [
   { title: "Route: edit_file", desc: "Adding a new tool = adding one entry to the dispatch map." },
   { title: "The Key Insight", desc: "The while loop stays the same. You only grow the dispatch map. That's it." },
 ];
+
+const STEP_INFO_RU = [
+  { title: "Таблица диспетчеризации", desc: "Словарь сопоставляет имя инструмента с функцией-обработчиком. Код цикла не меняется." },
+  { title: "Маршрут: bash", desc: "tool_call.name -> handlers['bash'](input). Маршрутизация по имени." },
+  { title: "Маршрут: read_file", desc: "Тот же шаблон, другой обработчик. Проверить вход, выполнить, вернуть результат." },
+  { title: "Маршрут: write_file", desc: "Любой инструмент возвращает tool_result, который попадает обратно в messages[]." },
+  { title: "Маршрут: edit_file", desc: "Добавить новый инструмент = добавить одну запись в таблицу диспетчеризации." },
+  { title: "Главная мысль", desc: "Цикл while остаётся прежним. Растёт только таблица диспетчеризации. Вот и всё." },
+];
+
+const STEP_INFO_ZH = STEP_INFO_EN;
+const STEP_INFO_JA = STEP_INFO_EN;
 
 // SVG layout constants
 const SVG_WIDTH = 600;
@@ -86,8 +109,8 @@ const CARD_W = 110;
 const CARD_H = 65;
 const CARD_GAP = 20;
 
-function getCardX(index: number): number {
-  const totalWidth = TOOLS.length * CARD_W + (TOOLS.length - 1) * CARD_GAP;
+function getCardX(index: number, toolCount: number): number {
+  const totalWidth = toolCount * CARD_W + (toolCount - 1) * CARD_GAP;
   const startX = (SVG_WIDTH - totalWidth) / 2;
   return startX + index * (CARD_W + CARD_GAP) + CARD_W / 2;
 }
@@ -104,6 +127,17 @@ export default function ToolDispatch({ title }: { title?: string }) {
   } = useSteppedVisualization({ totalSteps: 6, autoPlayInterval: 2500 });
 
   const palette = useSvgPalette();
+  const locale = useLocale();
+  const TOOLS =
+    locale === "ru" ? TOOLS_RU : locale === "zh" ? TOOLS_ZH : locale === "ja" ? TOOLS_JA : TOOLS_EN;
+  const STEP_INFO =
+    locale === "ru"
+      ? STEP_INFO_RU
+      : locale === "zh"
+        ? STEP_INFO_ZH
+        : locale === "ja"
+          ? STEP_INFO_JA
+          : STEP_INFO_EN;
   const activeToolIdx = ACTIVE_TOOL_PER_STEP[currentStep];
   const request = REQUEST_PER_STEP[currentStep];
   const stepInfo = STEP_INFO[currentStep];
@@ -119,7 +153,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
         {/* Incoming request display */}
         <div className="mb-4 flex min-h-[32px] items-center gap-2">
           <span className="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            Incoming:
+            {locale === "ru" ? "Входит:" : "Incoming:"}
           </span>
           <AnimatePresence mode="wait">
             {request && (
@@ -141,7 +175,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
                 animate={{ opacity: 0.6 }}
                 className="text-xs text-zinc-400 dark:text-zinc-600"
               >
-                waiting for tool_call...
+                {locale === "ru" ? "ждём tool_call..." : "waiting for tool_call..."}
               </motion.span>
             )}
             {isAllActive && (
@@ -151,7 +185,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
                 animate={{ opacity: 1 }}
                 className="text-xs font-medium text-emerald-600 dark:text-emerald-400"
               >
-                All routes active
+                {locale === "ru" ? "Все маршруты активны" : "All routes active"}
               </motion.span>
             )}
           </AnimatePresence>
@@ -232,7 +266,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
 
           {/* Connection lines from dispatcher to each tool card */}
           {TOOLS.map((tool, i) => {
-            const cardX = getCardX(i);
+            const cardX = getCardX(i, TOOLS.length);
             const isActive = isAllActive || i === activeToolIdx;
             const lineColor = isActive ? palette.activeEdgeStroke : palette.edgeStroke;
 
@@ -253,7 +287,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
 
           {/* Tool cards */}
           {TOOLS.map((tool, i) => {
-            const cardX = getCardX(i);
+            const cardX = getCardX(i, TOOLS.length);
             const isActive = isAllActive || i === activeToolIdx;
             const glowFilters = [
               "url(#card-glow-orange)",
@@ -317,7 +351,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
               transition={{ delay: 0.3, duration: 0.4 }}
             >
               <circle
-                cx={getCardX(3) + CARD_W / 2 + 30}
+                cx={getCardX(3, TOOLS.length) + CARD_W / 2 + 30}
                 cy={CARD_Y}
                 r={16}
                 fill="none"
@@ -326,7 +360,7 @@ export default function ToolDispatch({ title }: { title?: string }) {
                 strokeDasharray="4 3"
               />
               <text
-                x={getCardX(3) + CARD_W / 2 + 30}
+                x={getCardX(3, TOOLS.length) + CARD_W / 2 + 30}
                 y={CARD_Y + 1}
                 textAnchor="middle"
                 dominantBaseline="middle"

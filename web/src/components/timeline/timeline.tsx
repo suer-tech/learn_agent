@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTranslations, useLocale } from "@/lib/i18n";
 import { LEARNING_PATH, VERSION_META, LAYERS } from "@/lib/constants";
+import { localizeMeta } from "@/lib/version-i18n";
 import { LayerBadge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import versionsData from "@/data/generated/versions.json";
@@ -45,6 +46,7 @@ const MAX_LOC = Math.max(
 export function Timeline() {
   const t = useTranslations("timeline");
   const tv = useTranslations("version");
+  const tLayers = useTranslations("layer_labels");
   const locale = useLocale();
 
   return (
@@ -60,7 +62,7 @@ export function Timeline() {
               <span
                 className={cn("h-3 w-3 rounded-full", LAYER_DOT_BG[layer.id])}
               />
-              <span className="text-xs font-medium">{layer.label}</span>
+              <span className="text-xs font-medium">{tLayers(layer.id)}</span>
             </div>
           ))}
         </div>
@@ -69,9 +71,10 @@ export function Timeline() {
       {/* Vertical Timeline */}
       <div className="relative">
         {LEARNING_PATH.map((versionId, index) => {
-          const meta = VERSION_META[versionId];
+          const baseMeta = VERSION_META[versionId];
           const data = getVersionData(versionId);
-          if (!meta || !data) return null;
+          if (!baseMeta || !data) return null;
+          const meta = localizeMeta(baseMeta, versionId, locale);
 
           const isLast = index === LEARNING_PATH.length - 1;
           const locPercent = Math.round((data.loc / MAX_LOC) * 100);
@@ -173,9 +176,10 @@ export function Timeline() {
         <h3 className="mb-4 text-lg font-semibold">{t("loc_growth")}</h3>
         <div className="flex flex-col gap-2">
           {LEARNING_PATH.map((versionId) => {
-            const meta = VERSION_META[versionId];
+            const baseMeta = VERSION_META[versionId];
             const data = getVersionData(versionId);
-            if (!meta || !data) return null;
+            if (!baseMeta || !data) return null;
+            const meta = baseMeta;
 
             const widthPercent = Math.max(
               2,

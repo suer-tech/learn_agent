@@ -26,6 +26,7 @@ interface Decision {
   alternatives: string;
   zh?: { title: string; description: string };
   ja?: { title: string; description: string };
+  ru?: { title: string; description: string };
 }
 
 interface AnnotationFile {

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
+import { useLocale } from "@/lib/i18n";
 
 type TaskStatus = "pending" | "in_progress" | "completed";
 
@@ -35,7 +36,7 @@ interface StepState {
   op: string;
 }
 
-const STEPS: StepState[] = [
+const STEPS_EN: StepState[] = [
   {
     title: "Single Workspace Pain",
     desc: "Two tasks are active, but both edits would hit one directory and collide.",
@@ -142,6 +143,116 @@ const STEPS: StepState[] = [
   },
 ];
 
+const STEPS_RU: StepState[] = [
+  {
+    title: "Боль одного workspace",
+    desc: "Две задачи активны, но обе правки бьют в один каталог и конфликтуют.",
+    op: "task_create x2",
+    tasks: [
+      { id: 1, subject: "Рефакторинг auth", status: "in_progress", worktree: "" },
+      { id: 2, subject: "Полировка UI логина", status: "in_progress", worktree: "" },
+    ],
+    worktrees: [],
+    lanes: [
+      { name: "main", files: ["auth/service.py", "ui/Login.tsx"], highlight: true },
+      { name: "wt/auth-refactor", files: [] },
+      { name: "wt/ui-login", files: [] },
+    ],
+  },
+  {
+    title: "Выделить дорожку под задачу 1",
+    desc: "Создаём дорожку-worktree и привязываем её к задаче 1 для чёткого владения.",
+    op: "worktree_create(name='auth-refactor', task_id=1)",
+    tasks: [
+      { id: 1, subject: "Рефакторинг auth", status: "in_progress", worktree: "auth-refactor" },
+      { id: 2, subject: "Полировка UI логина", status: "in_progress", worktree: "" },
+    ],
+    worktrees: [
+      { name: "auth-refactor", branch: "wt/auth-refactor", task: "#1", state: "active" },
+    ],
+    lanes: [
+      { name: "main", files: ["ui/Login.tsx"] },
+      { name: "wt/auth-refactor", files: ["auth/service.py"], highlight: true },
+      { name: "wt/ui-login", files: [] },
+    ],
+  },
+  {
+    title: "Выделить дорожку под задачу 2",
+    desc: "Создание дорожки и привязка задачи могут идти раздельно. Здесь задача 2 привязывается после создания.",
+    op: "worktree_create(name='ui-login')\ntask_bind_worktree(task_id=2, worktree='ui-login')",
+    tasks: [
+      { id: 1, subject: "Рефакторинг auth", status: "in_progress", worktree: "auth-refactor" },
+      { id: 2, subject: "Полировка UI логина", status: "in_progress", worktree: "ui-login" },
+    ],
+    worktrees: [
+      { name: "auth-refactor", branch: "wt/auth-refactor", task: "#1", state: "active" },
+      { name: "ui-login", branch: "wt/ui-login", task: "#2", state: "active" },
+    ],
+    lanes: [
+      { name: "main", files: [] },
+      { name: "wt/auth-refactor", files: ["auth/service.py"] },
+      { name: "wt/ui-login", files: ["ui/Login.tsx"], highlight: true },
+    ],
+  },
+  {
+    title: "Запуск команд в изолированных дорожках",
+    desc: "Каждая команда маршрутизируется по выбранному каталогу дорожки, а не по общему корню.",
+    op: "worktree_run('auth-refactor', 'pytest tests/auth -q')",
+    tasks: [
+      { id: 1, subject: "Рефакторинг auth", status: "in_progress", worktree: "auth-refactor" },
+      { id: 2, subject: "Полировка UI логина", status: "in_progress", worktree: "ui-login" },
+    ],
+    worktrees: [
+      { name: "auth-refactor", branch: "wt/auth-refactor", task: "#1", state: "active" },
+      { name: "ui-login", branch: "wt/ui-login", task: "#2", state: "active" },
+    ],
+    lanes: [
+      { name: "main", files: [] },
+      { name: "wt/auth-refactor", files: ["auth/service.py", "tests/auth/test_login.py"], highlight: true },
+      { name: "wt/ui-login", files: ["ui/Login.tsx", "ui/Login.css"] },
+    ],
+  },
+  {
+    title: "Одну дорожку оставить, другую закрыть",
+    desc: "При завершении можно смешивать решения: оставить ui-login активной для продолжения, удалить auth-refactor и закрыть задачу 1.",
+    op: "worktree_keep('ui-login')\nworktree_remove('auth-refactor', complete_task=true)\nworktree_events(limit=10)",
+    tasks: [
+      { id: 1, subject: "Рефакторинг auth", status: "completed", worktree: "" },
+      { id: 2, subject: "Полировка UI логина", status: "in_progress", worktree: "ui-login" },
+    ],
+    worktrees: [
+      { name: "auth-refactor", branch: "wt/auth-refactor", task: "#1", state: "removed" },
+      { name: "ui-login", branch: "wt/ui-login", task: "#2", state: "kept" },
+    ],
+    lanes: [
+      { name: "main", files: [] },
+      { name: "wt/auth-refactor", files: [] },
+      { name: "wt/ui-login", files: ["ui/Login.tsx"], highlight: true },
+    ],
+  },
+  {
+    title: "Изоляция + координация + события",
+    desc: "Доска хранит общую истину, дорожки-worktree изолируют исполнение, а события дают аудируемый side-channel.",
+    op: "task_list + worktree_list + worktree_events",
+    tasks: [
+      { id: 1, subject: "Рефакторинг auth", status: "completed", worktree: "" },
+      { id: 2, subject: "Полировка UI логина", status: "in_progress", worktree: "ui-login" },
+    ],
+    worktrees: [
+      { name: "auth-refactor", branch: "wt/auth-refactor", task: "#1", state: "removed" },
+      { name: "ui-login", branch: "wt/ui-login", task: "#2", state: "kept" },
+    ],
+    lanes: [
+      { name: "main", files: [] },
+      { name: "wt/auth-refactor", files: [] },
+      { name: "wt/ui-login", files: ["ui/Login.tsx"], highlight: true },
+    ],
+  },
+];
+
+const STEPS_ZH = STEPS_EN;
+const STEPS_JA = STEPS_EN;
+
 function statusClass(status: TaskStatus): string {
   if (status === "completed") return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
   if (status === "in_progress") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300";
@@ -156,8 +267,31 @@ function worktreeClass(state: WorktreeRow["state"]): string {
 }
 
 export default function WorktreeTaskIsolation({ title }: { title?: string }) {
-  const vis = useSteppedVisualization({ totalSteps: STEPS.length, autoPlayInterval: 2600 });
+  const vis = useSteppedVisualization({ totalSteps: STEPS_EN.length, autoPlayInterval: 2600 });
+  const locale = useLocale();
+  const STEPS =
+    locale === "ru" ? STEPS_RU : locale === "zh" ? STEPS_ZH : locale === "ja" ? STEPS_JA : STEPS_EN;
   const step = STEPS[vis.currentStep];
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          taskBoard: "Доска задач (.tasks)",
+          worktreeIndex: "Индекс worktree (.worktrees/index.json)",
+          executionLanes: "Исполняющие дорожки",
+          noWorktrees: "пока нет worktree",
+          noChanges: "(нет изменений)",
+          worktreeLabel: "worktree:",
+          taskLabel: "задача:",
+        }
+      : {
+          taskBoard: "Task Board (.tasks)",
+          worktreeIndex: "Worktree Index (.worktrees/index.json)",
+          executionLanes: "Execution Lanes",
+          noWorktrees: "no worktrees yet",
+          noChanges: "(no changes)",
+          worktreeLabel: "worktree:",
+          taskLabel: "task:",
+        };
 
   return (
     <section className="min-h-[500px] space-y-4">
@@ -173,7 +307,7 @@ export default function WorktreeTaskIsolation({ title }: { title?: string }) {
         <div className="grid gap-3 lg:grid-cols-3">
           <div className="rounded-md border border-zinc-200 dark:border-zinc-700">
             <div className="border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              Task Board (.tasks)
+              {inlineLabels.taskBoard}
             </div>
             <div className="space-y-2 p-2">
               {step.tasks.map((task) => (
@@ -192,7 +326,7 @@ export default function WorktreeTaskIsolation({ title }: { title?: string }) {
                   </div>
                   <div className="mt-1 font-medium text-zinc-800 dark:text-zinc-100">{task.subject}</div>
                   <div className="mt-1 font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
-                    worktree: {task.worktree || "-"}
+                    {inlineLabels.worktreeLabel} {task.worktree || "-"}
                   </div>
                 </motion.div>
               ))}
@@ -201,12 +335,12 @@ export default function WorktreeTaskIsolation({ title }: { title?: string }) {
 
           <div className="rounded-md border border-zinc-200 dark:border-zinc-700">
             <div className="border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              Worktree Index (.worktrees/index.json)
+              {inlineLabels.worktreeIndex}
             </div>
             <div className="space-y-2 p-2">
               {step.worktrees.length === 0 && (
                 <div className="rounded border border-dashed border-zinc-300 px-3 py-4 text-center text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                  no worktrees yet
+                  {inlineLabels.noWorktrees}
                 </div>
               )}
               {step.worktrees.map((wt) => (
@@ -219,7 +353,7 @@ export default function WorktreeTaskIsolation({ title }: { title?: string }) {
                 >
                   <div className="font-mono text-[11px] font-semibold text-zinc-800 dark:text-zinc-100">{wt.name}</div>
                   <div className="font-mono text-[10px] text-zinc-500 dark:text-zinc-400">{wt.branch}</div>
-                  <div className="mt-1 text-[10px] text-zinc-600 dark:text-zinc-300">task: {wt.task}</div>
+                  <div className="mt-1 text-[10px] text-zinc-600 dark:text-zinc-300">{inlineLabels.taskLabel} {wt.task}</div>
                 </motion.div>
               ))}
             </div>
@@ -227,7 +361,7 @@ export default function WorktreeTaskIsolation({ title }: { title?: string }) {
 
           <div className="rounded-md border border-zinc-200 dark:border-zinc-700">
             <div className="border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              Execution Lanes
+              {inlineLabels.executionLanes}
             </div>
             <div className="space-y-2 p-2">
               {step.lanes.map((lane) => (
@@ -245,7 +379,7 @@ export default function WorktreeTaskIsolation({ title }: { title?: string }) {
                   <div className="font-mono text-[11px] font-semibold text-zinc-800 dark:text-zinc-100">{lane.name}</div>
                   <div className="mt-1 space-y-1 font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
                     {lane.files.length === 0 ? (
-                      <div>(no changes)</div>
+                      <div>{inlineLabels.noChanges}</div>
                     ) : (
                       lane.files.map((f) => <div key={f}>{f}</div>)
                     )}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations, useLocale } from "@/lib/i18n";
 import { LAYERS, VERSION_META } from "@/lib/constants";
+import { localizeMeta } from "@/lib/version-i18n";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { LayerBadge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,9 @@ const LAYER_HEADER_BG: Record<string, string> = {
 
 export default function LayersPage() {
   const t = useTranslations("layers");
+  const tLayers = useTranslations("layer_labels");
+  const tUi = useTranslations("ui");
+  const tVersion = useTranslations("version");
   const locale = useLocale();
 
   return (
@@ -43,7 +47,8 @@ export default function LayersPage() {
         {LAYERS.map((layer, index) => {
           const versionInfos = layer.versions.map((vId) => {
             const info = data.versions.find((v) => v.id === vId);
-            const meta = VERSION_META[vId];
+            const baseMeta = VERSION_META[vId];
+            const meta = baseMeta ? localizeMeta(baseMeta, vId, locale) : undefined;
             return { id: vId, info, meta };
           });
 
@@ -63,7 +68,7 @@ export default function LayersPage() {
                   <h2 className="text-xl font-bold">
                     <span className="text-zinc-400 dark:text-zinc-600">L{index + 1}</span>
                     {" "}
-                    {layer.label}
+                    {tLayers(layer.id)}
                   </h2>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                     {t(layer.id)}
@@ -102,8 +107,8 @@ export default function LayersPage() {
                           />
                         </div>
                         <div className="mt-3 flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
-                          <span>{info?.loc ?? "?"} LOC</span>
-                          <span>{info?.tools.length ?? "?"} tools</span>
+                          <span>{info?.loc ?? "?"} {tVersion("loc")}</span>
+                          <span>{info?.tools.length ?? "?"} {tVersion("tools")}</span>
                         </div>
                         {meta?.keyInsight && (
                           <p className="mt-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400 line-clamp-2">

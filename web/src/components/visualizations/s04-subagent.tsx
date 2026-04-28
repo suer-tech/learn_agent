@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
+import { useLocale } from "@/lib/i18n";
 
 interface MessageBlock {
   id: string;
@@ -10,30 +11,53 @@ interface MessageBlock {
   color: string;
 }
 
-const PARENT_BASE_MESSAGES: MessageBlock[] = [
+const PARENT_BASE_MESSAGES_EN: MessageBlock[] = [
   { id: "p1", label: "user: Build login + tests", color: "bg-blue-500" },
   { id: "p2", label: "assistant: Planning approach...", color: "bg-zinc-600" },
   { id: "p3", label: "tool_result: project structure", color: "bg-emerald-500" },
 ];
 
-const TASK_PROMPT: MessageBlock = {
+const PARENT_BASE_MESSAGES_RU: MessageBlock[] = [
+  { id: "p1", label: "user: Сделай логин + тесты", color: "bg-blue-500" },
+  { id: "p2", label: "assistant: Планирую подход...", color: "bg-zinc-600" },
+  { id: "p3", label: "tool_result: структура проекта", color: "bg-emerald-500" },
+];
+
+const TASK_PROMPT_EN: MessageBlock = {
   id: "task",
   label: "task: Write unit tests for auth",
   color: "bg-purple-500",
 };
 
-const CHILD_WORK_MESSAGES: MessageBlock[] = [
+const TASK_PROMPT_RU: MessageBlock = {
+  id: "task",
+  label: "task: Написать unit-тесты для auth",
+  color: "bg-purple-500",
+};
+
+const CHILD_WORK_MESSAGES_EN: MessageBlock[] = [
   { id: "c1", label: "tool_use: read auth.ts", color: "bg-amber-500" },
   { id: "c2", label: "tool_use: write test.ts", color: "bg-amber-500" },
 ];
 
-const SUMMARY_BLOCK: MessageBlock = {
+const CHILD_WORK_MESSAGES_RU: MessageBlock[] = [
+  { id: "c1", label: "tool_use: read auth.ts", color: "bg-amber-500" },
+  { id: "c2", label: "tool_use: write test.ts", color: "bg-amber-500" },
+];
+
+const SUMMARY_BLOCK_EN: MessageBlock = {
   id: "summary",
   label: "summary: 3 tests written, all passing",
   color: "bg-teal-500",
 };
 
-const STEPS = [
+const SUMMARY_BLOCK_RU: MessageBlock = {
+  id: "summary",
+  label: "summary: 3 теста написаны, все проходят",
+  color: "bg-teal-500",
+};
+
+const STEPS_EN = [
   {
     title: "Parent Context",
     description:
@@ -66,6 +90,50 @@ const STEPS = [
   },
 ];
 
+const STEPS_RU = [
+  {
+    title: "Контекст родителя",
+    description:
+      "У родительского агента уже накопились сообщения из диалога.",
+  },
+  {
+    title: "Запуск подагента",
+    description:
+      "Инструмент Task создаёт ребёнка со свежим messages[]. Передаётся только описание задачи.",
+  },
+  {
+    title: "Независимая работа",
+    description:
+      "У ребёнка свой контекст. Он не видит истории родителя.",
+  },
+  {
+    title: "Сжатие результата",
+    description:
+      "Весь диалог ребёнка сжимается в одну сводку.",
+  },
+  {
+    title: "Возврат сводки",
+    description:
+      "Возвращается только сводка. Полный контекст ребёнка отбрасывается.",
+  },
+  {
+    title: "Чистый контекст",
+    description:
+      "Родитель получает чистую сводку без раздувания контекста. Это изоляция через свежий messages[].",
+  },
+];
+
+const PARENT_BASE_MESSAGES_ZH = PARENT_BASE_MESSAGES_EN;
+const PARENT_BASE_MESSAGES_JA = PARENT_BASE_MESSAGES_EN;
+const TASK_PROMPT_ZH = TASK_PROMPT_EN;
+const TASK_PROMPT_JA = TASK_PROMPT_EN;
+const CHILD_WORK_MESSAGES_ZH = CHILD_WORK_MESSAGES_EN;
+const CHILD_WORK_MESSAGES_JA = CHILD_WORK_MESSAGES_EN;
+const SUMMARY_BLOCK_ZH = SUMMARY_BLOCK_EN;
+const SUMMARY_BLOCK_JA = SUMMARY_BLOCK_EN;
+const STEPS_ZH = STEPS_EN;
+const STEPS_JA = STEPS_EN;
+
 export default function SubagentIsolation({ title }: { title?: string }) {
   const {
     currentStep,
@@ -75,7 +143,69 @@ export default function SubagentIsolation({ title }: { title?: string }) {
     reset,
     isPlaying,
     toggleAutoPlay,
-  } = useSteppedVisualization({ totalSteps: STEPS.length, autoPlayInterval: 2500 });
+  } = useSteppedVisualization({ totalSteps: STEPS_EN.length, autoPlayInterval: 2500 });
+
+  const locale = useLocale();
+  const PARENT_BASE_MESSAGES =
+    locale === "ru"
+      ? PARENT_BASE_MESSAGES_RU
+      : locale === "zh"
+        ? PARENT_BASE_MESSAGES_ZH
+        : locale === "ja"
+          ? PARENT_BASE_MESSAGES_JA
+          : PARENT_BASE_MESSAGES_EN;
+  const TASK_PROMPT =
+    locale === "ru"
+      ? TASK_PROMPT_RU
+      : locale === "zh"
+        ? TASK_PROMPT_ZH
+        : locale === "ja"
+          ? TASK_PROMPT_JA
+          : TASK_PROMPT_EN;
+  const CHILD_WORK_MESSAGES =
+    locale === "ru"
+      ? CHILD_WORK_MESSAGES_RU
+      : locale === "zh"
+        ? CHILD_WORK_MESSAGES_ZH
+        : locale === "ja"
+          ? CHILD_WORK_MESSAGES_JA
+          : CHILD_WORK_MESSAGES_EN;
+  const SUMMARY_BLOCK =
+    locale === "ru"
+      ? SUMMARY_BLOCK_RU
+      : locale === "zh"
+        ? SUMMARY_BLOCK_ZH
+        : locale === "ja"
+          ? SUMMARY_BLOCK_JA
+          : SUMMARY_BLOCK_EN;
+  const STEPS =
+    locale === "ru" ? STEPS_RU : locale === "zh" ? STEPS_ZH : locale === "ja" ? STEPS_JA : STEPS_EN;
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          parentProcess: "Родительский процесс",
+          childProcess: "Дочерний процесс",
+          freshMessages: "messages[] (свежий)",
+          isolation: "ИЗОЛЯЦИЯ",
+          notSpawned: "пока не запущен",
+          compressing: "Сжимаем полный контекст в сводку...",
+          contextDiscarded: "контекст отброшен",
+          cleanContextNote: "3 исходных + 1 сводка = чистый контекст",
+          taskPrompt: "task prompt",
+          summary: "summary",
+        }
+      : {
+          parentProcess: "Parent Process",
+          childProcess: "Child Process",
+          freshMessages: "messages[] (fresh)",
+          isolation: "ISOLATION",
+          notSpawned: "not yet spawned",
+          compressing: "Compressing full context into summary...",
+          contextDiscarded: "context discarded",
+          cleanContextNote: "3 original + 1 summary = clean context",
+          taskPrompt: "task prompt",
+          summary: "summary",
+        };
 
   // Derive what to show in each container based on step
   const parentMessages: MessageBlock[] = (() => {
@@ -117,7 +247,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
             <div className="mb-3 flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-blue-500" />
               <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
-                Parent Process
+                {inlineLabels.parentProcess}
               </span>
             </div>
             <div className="mb-2 font-mono text-xs text-zinc-400">
@@ -146,7 +276,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                 transition={{ delay: 0.5 }}
                 className="mt-3 rounded border border-blue-200 bg-white/60 px-2 py-1 text-center text-xs text-blue-600 dark:border-blue-700 dark:bg-blue-950/30 dark:text-blue-300"
               >
-                3 original + 1 summary = clean context
+                {inlineLabels.cleanContextNote}
               </motion.div>
             )}
           </div>
@@ -161,7 +291,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
               className="rounded bg-zinc-200 px-2 py-1 text-center font-mono text-[10px] text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400"
               style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
             >
-              ISOLATION
+              {inlineLabels.isolation}
             </motion.div>
             <div className="h-full w-px border-l-2 border-dashed border-zinc-300 dark:border-zinc-600" />
           </div>
@@ -195,11 +325,11 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                       : "text-purple-700 dark:text-purple-300"
                 }`}
               >
-                Child Process
+                {inlineLabels.childProcess}
               </span>
             </div>
             <div className="mb-2 font-mono text-xs text-zinc-400">
-              messages[] (fresh)
+              {inlineLabels.freshMessages}
             </div>
 
             {showChildEmpty && (
@@ -209,7 +339,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                 className="flex h-24 items-center justify-center rounded-lg border border-dashed border-zinc-200 dark:border-zinc-700"
               >
                 <span className="text-xs text-zinc-400">
-                  not yet spawned
+                  {inlineLabels.notSpawned}
                 </span>
               </motion.div>
             )}
@@ -237,7 +367,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                 animate={{ opacity: 1, scale: 1 }}
                 className="mt-3 rounded border border-amber-300 bg-amber-50 px-2 py-1 text-center text-xs text-amber-700 dark:border-amber-600 dark:bg-amber-900/20 dark:text-amber-300"
               >
-                Compressing full context into summary...
+                {inlineLabels.compressing}
               </motion.div>
             )}
 
@@ -247,7 +377,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                 animate={{ opacity: 1 }}
                 className="mt-3 rounded border border-red-200 bg-red-50 px-2 py-1 text-center text-xs text-red-500 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
               >
-                context discarded
+                {inlineLabels.contextDiscarded}
               </motion.div>
             )}
           </div>
@@ -264,7 +394,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                 style={{ zIndex: 10 }}
               >
                 <div className="rounded-lg bg-purple-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
-                  task prompt
+                  {inlineLabels.taskPrompt}
                 </div>
               </motion.div>
             )}
@@ -281,7 +411,7 @@ export default function SubagentIsolation({ title }: { title?: string }) {
                 style={{ zIndex: 10 }}
               >
                 <div className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
-                  summary
+                  {inlineLabels.summary}
                 </div>
               </motion.div>
             )}

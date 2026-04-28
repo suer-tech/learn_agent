@@ -1,46 +1,46 @@
 {
   "version": "s02",
-  "title": "Tools",
-  "description": "Agent with read, write, edit, and bash tools",
+  "title": "Инструменты",
+  "description": "Агент с инструментами read, write, edit и bash",
   "steps": [
     {
       "type": "user_message",
-      "content": "Add a function called greet(name) to hello.py",
-      "annotation": "User requests a code modification"
+      "content": "Добавь функцию greet(name) в hello.py",
+      "annotation": "Пользователь запрашивает изменение кода"
     },
     {
       "type": "assistant_text",
-      "content": "Let me read the current file first.",
-      "annotation": "Model chooses read_file instead of bash cat"
+      "content": "Сначала прочитаю текущий файл.",
+      "annotation": "Модель выбирает read_file вместо bash cat"
     },
     {
       "type": "tool_call",
       "content": "hello.py",
       "toolName": "read_file",
-      "annotation": "Dedicated read tool provides cleaner file access"
+      "annotation": "Отдельный инструмент чтения обеспечивает более чистый доступ к файлу"
     },
     {
       "type": "tool_result",
       "content": "print(\"Hello, World!\")",
       "toolName": "read_file",
-      "annotation": "File contents returned to the model"
+      "annotation": "Содержимое файла возвращено модели"
     },
     {
       "type": "tool_call",
       "content": "hello.py\n---\ndef greet(name):\n    print(f\"Hello, {name}!\")\n\ngreet(\"World\")",
       "toolName": "write_file",
-      "annotation": "write_file replaces the entire file content"
+      "annotation": "write_file заменяет всё содержимое файла"
     },
     {
       "type": "tool_result",
       "content": "File written successfully",
       "toolName": "write_file",
-      "annotation": "Write confirmed"
+      "annotation": "Запись подтверждена"
     },
     {
       "type": "assistant_text",
-      "content": "I've updated hello.py with a greet(name) function that takes a name parameter.",
-      "annotation": "4 tools beat 1: each tool has a clear, focused purpose"
+      "content": "Я обновил hello.py: добавил функцию greet(name), которая принимает параметр name.",
+      "annotation": "4 инструмента побеждают 1: у каждого инструмента ясное и узкое назначение"
     }
   ]
 }

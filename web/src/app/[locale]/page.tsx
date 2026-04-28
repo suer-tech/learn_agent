@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations, useLocale } from "@/lib/i18n";
 import { LEARNING_PATH, VERSION_META, LAYERS } from "@/lib/constants";
+import { localizeMeta } from "@/lib/version-i18n";
 import { LayerBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ function getVersionData(id: string) {
 
 export default function HomePage() {
   const t = useTranslations("home");
+  const tLayers = useTranslations("layer_labels");
   const locale = useLocale();
 
   return (
@@ -148,9 +150,10 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {LEARNING_PATH.map((versionId) => {
-            const meta = VERSION_META[versionId];
+            const baseMeta = VERSION_META[versionId];
             const data = getVersionData(versionId);
-            if (!meta || !data) return null;
+            if (!baseMeta || !data) return null;
+            const meta = localizeMeta(baseMeta, versionId, locale);
             return (
               <Link
                 key={versionId}
@@ -204,21 +207,23 @@ export default function HomePage() {
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold">{layer.label}</h3>
+                  <h3 className="text-sm font-semibold">{tLayers(layer.id)}</h3>
                   <span className="text-xs text-[var(--color-text-secondary)]">
                     {layer.versions.length} {t("versions_in_layer")}
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {layer.versions.map((vid) => {
-                    const meta = VERSION_META[vid];
+                    const baseMeta = VERSION_META[vid];
+                    if (!baseMeta) return null;
+                    const meta = localizeMeta(baseMeta, vid, locale);
                     return (
                       <Link key={vid} href={`/${locale}/${vid}`}>
                         <LayerBadge
                           layer={layer.id}
                           className="cursor-pointer transition-opacity hover:opacity-80"
                         >
-                          {vid}: {meta?.title}
+                          {vid}: {meta.title}
                         </LayerBadge>
                       </Link>
                     );

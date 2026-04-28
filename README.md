@@ -1,53 +1,52 @@
-[English](./README.md) | [中文](./README-zh.md) | [日本語](./README-ja.md)
-# Learn Claude Code -- Harness Engineering for Real Agents
+# Learn Agent Code -- Harness Engineering для настоящих агентов
 
-## Agency Comes from the Model. An Agent Product = Model + Harness.
+## Агентность исходит из модели. Agent-продукт = модель + harness.
 
-Before we talk about code, let's get one thing straight.
+Прежде чем говорить о коде, давайте проясним одну вещь.
 
-**Agency -- the ability to perceive, reason, and act -- comes from model training, not from external code orchestration.** But a working agent product needs both the model and the harness. The model is the driver, the harness is the vehicle. This repo teaches you how to build the vehicle.
+**Агентность -- способность воспринимать, рассуждать и действовать -- возникает в результате обучения модели, а не из внешней оркестрации кода.** Но работающий agent-продукт нуждается и в модели, и в harness. Модель -- это водитель, harness -- это автомобиль. Этот репозиторий учит вас строить автомобиль.
 
-### Where Agency Comes From
+### Откуда берётся агентность
 
-At the core of every agent is a neural network -- a Transformer, an RNN, a learned function -- that has been trained, through billions of gradient updates on action-sequence data, to perceive an environment, reason about goals, and take actions. Agency is never granted by the surrounding code. It is learned by the model during training.
+В основе каждого агента лежит нейронная сеть -- Transformer, RNN или иная обученная функция, -- прошедшая через миллиарды градиентных обновлений на данных из последовательностей действий, чтобы научиться воспринимать среду, рассуждать о целях и совершать действия. Агентность никогда не даруется окружающим кодом. Она усваивается моделью в процессе обучения.
 
-Humans are the best example. A biological neural network shaped by millions of years of evolutionary training, perceiving the world through senses, reasoning through a brain, acting through a body. When DeepMind, OpenAI, or Anthropic say "agent," the core of what they mean is always the same thing: **a model that has learned to act, plus the infrastructure that lets it operate in a specific environment.**
+Лучший пример -- человек. Биологическая нейронная сеть, сформированная миллионами лет эволюционного обучения, воспринимает мир через органы чувств, рассуждает с помощью мозга и действует через тело. Когда DeepMind, OpenAI или Anthropic говорят "agent", в основе они всегда имеют в виду одно и то же: **модель, которая научилась действовать, плюс инфраструктуру, позволяющую ей работать в конкретной среде.**
 
-The proof is written in history:
+Доказательства написаны историей:
 
-- **2013 -- DeepMind DQN plays Atari.** A single neural network, receiving only raw pixels and game scores, learned to play 7 Atari 2600 games -- surpassing all prior algorithms and beating human experts on 3 of them. By 2015, the same architecture scaled to [49 games and matched professional human testers](https://www.nature.com/articles/nature14236), published in *Nature*. No game-specific rules. No decision trees. One model, learning from experience. That model was the agent.
+- **2013 -- DeepMind DQN играет в Atari.** Одна нейронная сеть, получая на вход только сырые пиксели и игровой счёт, научилась играть в 7 игр для Atari 2600 -- превзойдя все предшествующие алгоритмы и обыграв в 3 из них экспертов-людей. К 2015 году та же архитектура масштабировалась до [49 игр и сравнялась с профессиональными тестировщиками](https://www.nature.com/articles/nature14236), о чём была опубликована статья в *Nature*. Никаких правил, специфичных для игры. Никаких деревьев решений. Одна модель, обучающаяся на собственном опыте. Эта модель и была агентом.
 
-- **2019 -- OpenAI Five conquers Dota 2.** Five neural networks, having played [45,000 years of Dota 2](https://openai.com/index/openai-five-defeats-dota-2-world-champions/) against themselves in 10 months, defeated **OG** -- the reigning TI8 world champions -- 2-0 on a San Francisco livestream. In a subsequent public arena, the AI won 99.4% of 42,729 games against all comers. No scripted strategies. No meta-programmed team coordination. The models learned teamwork, tactics, and real-time adaptation entirely through self-play.
+- **2019 -- OpenAI Five побеждает Dota 2.** Пять нейронных сетей, сыгравших [45 000 лет Dota 2](https://openai.com/index/openai-five-defeats-dota-2-world-champions/) друг против друга за 10 месяцев, разгромили **OG** -- действующих чемпионов мира TI8 -- со счётом 2-0 в прямой трансляции из Сан-Франциско. На последующей публичной арене ИИ выиграл 99,4% из 42 729 игр против всех желающих. Никаких сценарных стратегий. Никакой запрограммированной командной координации. Модели усвоили командную игру, тактику и адаптацию в реальном времени исключительно через self-play.
 
-- **2019 -- DeepMind AlphaStar masters StarCraft II.** AlphaStar [beat professional players 10-1](https://deepmind.google/blog/alphastar-mastering-the-real-time-strategy-game-starcraft-ii/) in a closed-door match, and later achieved [Grandmaster status](https://www.nature.com/articles/d41586-019-03298-6) on European servers -- top 0.15% of 90,000 players. A game with imperfect information, real-time decisions, and a combinatorial action space that dwarfs chess and Go. The agent? A model. Trained. Not scripted.
+- **2019 -- DeepMind AlphaStar осваивает StarCraft II.** AlphaStar [обыграл профессиональных игроков 10-1](https://deepmind.google/blog/alphastar-mastering-the-real-time-strategy-game-starcraft-ii/) в закрытом матче, а затем достиг [статуса Grandmaster](https://www.nature.com/articles/d41586-019-03298-6) на европейских серверах -- топ-0,15% из 90 000 игроков. Игра с неполной информацией, решениями в реальном времени и комбинаторным пространством действий, на порядки превосходящим шахматы и го. Агент? Модель. Обученная. Не запрограммированная.
 
-- **2019 -- Tencent Jueyu dominates Honor of Kings.** Tencent AI Lab's "Jueyu" [defeated KPL professional players](https://www.jiemian.com/article/3371171.html) in a full 5v5 match at the World Champion Cup. In 1v1 mode, pros won only [1 out of 15 games and never survived past 8 minutes](https://developer.aliyun.com/article/851058). Training intensity: one day equaled 440 human years. By 2021, Jueyu surpassed KPL pros across the full hero pool. No handcrafted matchup tables. No scripted compositions. A model that learned the entire game from scratch through self-play.
+- **2019 -- Tencent Jueyu доминирует в Honor of Kings.** "Jueyu" от Tencent AI Lab [одолел профессиональных игроков KPL](https://www.jiemian.com/article/3371171.html) в полноценном матче 5v5 на World Champion Cup. В режиме 1v1 профи выиграли только [1 партию из 15 и ни разу не продержались дольше 8 минут](https://developer.aliyun.com/article/851058). Интенсивность обучения: один день равнялся 440 человеческим годам. К 2021 году Jueyu превзошёл профи KPL по всему пулу героев. Никаких рукотворных таблиц матчапов. Никаких сценарных композиций. Модель, освоившая всю игру с нуля через self-play.
 
-- **2024-2025 -- LLM agents reshape software engineering.** Claude, GPT, Gemini -- large language models trained on the entirety of human code and reasoning -- are deployed as coding agents. They read codebases, write implementations, debug failures, coordinate in teams. The architecture is identical to every agent before them: a trained model, placed in an environment, given tools to perceive and act. The only difference is the scale of what they've learned and the generality of the tasks they solve.
+- **2024-2025 -- LLM-агенты переформатируют разработку ПО.** Claude, GPT, Gemini -- большие языковые модели, обученные на всём массиве человеческого кода и рассуждений, -- развёртываются как кодинг-агенты. Они читают кодовые базы, пишут реализации, отлаживают сбои, координируются в командах. Архитектура идентична любому агенту до них: обученная модель, помещённая в среду, снабжённая инструментами для восприятия и действия. Единственное отличие -- масштаб того, что они выучили, и общность задач, которые они решают.
 
-Every one of these milestones points to the same fact: **agency -- the ability to perceive, reason, and act -- is trained, not coded.** But every agent also needed an environment to operate in: the Atari emulator, the Dota 2 client, the StarCraft II engine, the IDE and terminal. The model provides intelligence. The environment provides the action space. Together they form a complete agent.
+Каждая из этих вех указывает на один и тот же факт: **агентность -- способность воспринимать, рассуждать и действовать -- обучается, а не программируется.** Но каждому агенту также требовалась среда, в которой он мог работать: эмулятор Atari, клиент Dota 2, движок StarCraft II, IDE и терминал. Модель обеспечивает интеллект. Среда задаёт пространство действий. Вместе они образуют целостного агента.
 
-### What an Agent Is NOT
+### Что НЕ является агентом
 
-The word "agent" has been hijacked by an entire cottage industry of prompt plumbing.
+Слово "agent" захвачено целой кустарной индустрией prompt plumbing.
 
-Drag-and-drop workflow builders. No-code "AI agent" platforms. Prompt-chain orchestration libraries. They all share the same delusion: that wiring together LLM API calls with if-else branches, node graphs, and hardcoded routing logic constitutes "building an agent."
+Drag-and-drop конструкторы рабочих процессов. No-code-платформы "AI agent". Библиотеки оркестрации цепочек промптов. Все они разделяют одно и то же заблуждение: что соединение вызовов LLM API через if-else, графы узлов и захардкоженную маршрутизацию равносильно "построению агента".
 
-It doesn't. What they build is a Rube Goldberg machine -- an over-engineered, brittle pipeline of procedural rules, with an LLM wedged in as a glorified text-completion node. That is not an agent. That is a shell script with delusions of grandeur.
+Это не так. То, что они строят, -- машина Голдберга: переусложнённый, хрупкий пайплайн процедурных правил, в который втиснут LLM в роли причудливого узла text-completion. Это не агент. Это shell-скрипт с манией величия.
 
-**Prompt plumbing "agents" are the fantasy of programmers who don't train models.** They attempt to brute-force intelligence by stacking procedural logic -- massive rule trees, node graphs, chain-of-prompt waterfalls -- and praying that enough glue code will somehow emergently produce autonomous behavior. It won't. You cannot engineer your way to agency. Agency is learned, not programmed.
+**"Агенты" из prompt plumbing -- это фантазия программистов, которые не обучают моделей.** Они пытаются взять интеллект грубой силой, наслаивая процедурную логику -- огромные деревья правил, графы узлов, водопады цепочек промптов, -- и молясь, чтобы из достаточного количества клея каким-то образом эмерджентно возникло автономное поведение. Не возникнет. Нельзя инженерным трудом проложить путь к агентности. Агентность усваивается, а не программируется.
 
-Those systems are dead on arrival: fragile, unscalable, fundamentally incapable of generalization. They are the modern resurrection of GOFAI (Good Old-Fashioned AI) -- the symbolic rule systems the field abandoned decades ago, now spray-painted with an LLM veneer. Different packaging, same dead end.
+Эти системы мертворождённые: хрупкие, немасштабируемые, принципиально неспособные к обобщению. Это современное воскрешение GOFAI (Good Old-Fashioned AI) -- символьных систем правил, от которых область отказалась десятилетия назад, теперь покрытых LLM-лаком. Другая упаковка, тот же тупик.
 
-### The Mind Shift: From "Developing Agents" to Developing Harness
+### Сдвиг мышления: от "разработки агентов" к разработке harness
 
-When someone says "I'm developing an agent," they can only mean one of two things:
+Когда кто-то говорит "я разрабатываю агента", он может иметь в виду только одно из двух:
 
-**1. Training the model.** Adjusting weights through reinforcement learning, fine-tuning, RLHF, or other gradient-based methods. Collecting task-process data -- the actual sequences of perception, reasoning, and action in real domains -- and using it to shape the model's behavior. This is what DeepMind, OpenAI, Tencent AI Lab, and Anthropic do. This is agent development in the truest sense.
+**1. Обучение модели.** Корректировка весов через обучение с подкреплением, fine-tuning, RLHF или другие градиентные методы. Сбор данных task-process -- реальных последовательностей восприятия, рассуждения и действия в конкретных доменах -- и использование их для формирования поведения модели. Этим занимаются DeepMind, OpenAI, Tencent AI Lab и Anthropic. Это разработка агента в самом истинном смысле.
 
-**2. Building the harness.** Writing the code that gives the model an environment to operate in. This is what most of us do, and it is the focus of this repository.
+**2. Построение harness.** Написание кода, дающего модели среду, в которой она может работать. Этим занимается большинство из нас, и это и есть фокус данного репозитория.
 
-A harness is everything the agent needs to function in a specific domain:
+Harness -- это всё, что нужно агенту, чтобы функционировать в конкретном домене:
 
 ```
 Harness = Tools + Knowledge + Observation + Action Interfaces + Permissions
@@ -59,37 +58,37 @@ Harness = Tools + Knowledge + Observation + Action Interfaces + Permissions
     Permissions:    sandboxing, approval workflows, trust boundaries
 ```
 
-The model decides. The harness executes. The model reasons. The harness provides context. The model is the driver. The harness is the vehicle.
+Модель решает. Harness исполняет. Модель рассуждает. Harness предоставляет контекст. Модель -- водитель. Harness -- автомобиль.
 
-**A coding agent's harness is its IDE, terminal, and filesystem access.** A farm agent's harness is its sensor array, irrigation controls, and weather data feeds. A hotel agent's harness is its booking system, guest communication channels, and facility management APIs. The agent -- the intelligence, the decision-maker -- is always the model. The harness changes per domain. The agent generalizes across them.
+**Harness кодинг-агента -- это его IDE, терминал и доступ к файловой системе.** Harness фермерского агента -- его массив датчиков, управление поливом и потоки данных о погоде. Harness гостиничного агента -- его система бронирования, каналы связи с гостями и API управления объектом. Агент -- интеллект, принимающий решения, -- всегда модель. Harness меняется в зависимости от домена. Агент обобщается между доменами.
 
-This repo teaches you to build vehicles. Vehicles for coding. But the design patterns generalize to any domain: farm management, hotel operations, manufacturing, logistics, healthcare, education, scientific research. Anywhere a task needs to be perceived, reasoned about, and acted upon -- an agent needs a harness.
+Этот репозиторий учит строить автомобили. Автомобили для программирования. Но шаблоны проектирования обобщаются на любой домен: управление фермой, гостиничные операции, производство, логистика, здравоохранение, образование, научные исследования. Везде, где задачу нужно воспринять, обдумать и выполнить, -- агенту нужен harness.
 
-### What Harness Engineers Actually Do
+### Чем на самом деле занимаются harness-инженеры
 
-If you are reading this repository, you are likely a harness engineer -- and that is a powerful thing to be. Here is your real job:
+Если вы читаете этот репозиторий, вы, скорее всего, harness-инженер -- и быть им очень здорово. Вот ваша настоящая работа:
 
-- **Implement tools.** Give the agent hands. File read/write, shell execution, API calls, browser control, database queries. Each tool is an action the agent can take in its environment. Design them to be atomic, composable, and well-described.
+- **Реализуйте Tools.** Дайте агенту руки. Чтение/запись файлов, выполнение shell-команд, вызовы API, управление браузером, запросы к базам данных. Каждый инструмент -- это действие, которое агент может совершить в своей среде. Проектируйте их атомарными, композируемыми и хорошо описанными.
 
-- **Curate knowledge.** Give the agent domain expertise. Product documentation, architectural decision records, style guides, regulatory requirements. Load them on-demand (s05), not upfront. The agent should know what's available and pull what it needs.
+- **Курируйте знания.** Дайте агенту экспертизу в домене. Документацию продукта, записи архитектурных решений, руководства по стилю, регуляторные требования. Загружайте их по требованию (s05), а не заранее. Агент должен знать, что доступно, и подтягивать то, что нужно.
 
-- **Manage context.** Give the agent clean memory. Subagent isolation (s04) prevents noise from leaking. Context compression (s06) prevents history from overwhelming. Task systems (s07) persist goals beyond any single conversation.
+- **Управляйте контекстом.** Дайте агенту чистую память. Изоляция Subagents (s04) предотвращает утечку шума. Сжатие контекста (s06) не даёт истории захлестнуть процесс. Системы Tasks (s07) сохраняют цели за пределами одного диалога.
 
-- **Control permissions.** Give the agent boundaries. Sandbox file access. Require approval for destructive operations. Enforce trust boundaries between the agent and external systems. This is where safety engineering meets harness engineering.
+- **Контролируйте permissions.** Дайте агенту границы. Изолируйте файловый доступ. Требуйте подтверждения для деструктивных операций. Обеспечивайте границы доверия между агентом и внешними системами. Здесь инженерия безопасности встречается с harness-инжинирингом.
 
-- **Collect task-process data.** Every action sequence the agent executes in your harness is training signal. The perception-reasoning-action traces from real deployments are the raw material for fine-tuning the next generation of agent models. Your harness doesn't just serve the agent -- it can help improve the agent.
+- **Собирайте данные task-process.** Каждая последовательность действий, которую агент исполняет в вашем harness, -- это обучающий сигнал. Трассы восприятие-рассуждение-действие из реальных развёртываний -- это сырьё для fine-tuning следующего поколения моделей-агентов. Ваш harness не просто обслуживает агента -- он может помочь его улучшить.
 
-You are not writing the intelligence. You are building the world the intelligence inhabits. The quality of that world -- how clearly the agent can perceive, how precisely it can act, how rich its available knowledge is -- directly determines how effectively the intelligence can express itself.
+Вы не пишете интеллект. Вы строите мир, в котором этот интеллект обитает. Качество этого мира -- насколько чётко агент может воспринимать, насколько точно он может действовать, насколько богаты доступные ему знания -- напрямую определяет, насколько эффективно интеллект может проявить себя.
 
-**Build great harnesses. The agent will do the rest.**
+**Стройте отличные harness. Остальное сделает агент.**
 
-### Why Claude Code -- A Masterclass in Harness Engineering
+### Почему Claude Code -- мастер-класс по harness-инжинирингу
 
-Why does this repository dissect Claude Code specifically?
+Почему этот репозиторий разбирает именно Claude Code?
 
-Because Claude Code is the most elegant and fully-realized agent harness we have seen. Not because of any single clever trick, but because of what it *doesn't* do: it doesn't try to be the agent. It doesn't impose rigid workflows. It doesn't second-guess the model with elaborate decision trees. It provides the model with tools, knowledge, context management, and permission boundaries -- then gets out of the way.
+Потому что Claude Code -- самый изящный и полнее всего реализованный harness агента, который мы видели. Не из-за какого-то одного остроумного трюка, а из-за того, чего он *не* делает: он не пытается быть агентом. Он не навязывает жёстких рабочих процессов. Он не подвергает модель сомнению через сложные деревья решений. Он предоставляет модели tools, знания, управление контекстом и границы permissions -- а затем уходит с дороги.
 
-Look at what Claude Code actually is, stripped to its essence:
+Посмотрите, чем на самом деле является Claude Code, если свести его к сути:
 
 ```
 Claude Code = one agent loop
@@ -103,19 +102,19 @@ Claude Code = one agent loop
             + permission governance
 ```
 
-That's it. That's the entire architecture. Every component is a harness mechanism -- a piece of the world built for the agent to inhabit. The agent itself? It's Claude. A model. Trained by Anthropic on the full breadth of human reasoning and code. The harness doesn't make Claude smart. Claude is already smart. The harness gives Claude hands, eyes, and a workspace.
+Вот и всё. Это вся архитектура. Каждый компонент -- это механизм harness, фрагмент мира, выстроенного для обитания агента. А сам агент? Это Claude. Модель. Обученная Anthropic на всей широте человеческих рассуждений и кода. Harness не делает Claude умным. Claude уже умён. Harness даёт Claude руки, глаза и рабочее пространство.
 
-This is why Claude Code is the ideal teaching subject: **it demonstrates what happens when you trust the model and focus your engineering on the harness.** Every session in this repository (s01-s12) reverse-engineers one harness mechanism from Claude Code's architecture. By the end, you understand not just how Claude Code works, but the universal principles of harness engineering that apply to any agent in any domain.
+Именно поэтому Claude Code -- идеальный объект для изучения: **он демонстрирует, что происходит, когда вы доверяете модели и фокусируете инженерию на harness.** Каждая сессия в этом репозитории (s01-s12) реверс-инжинирит один механизм harness из архитектуры Claude Code. К концу вы поймёте не только то, как работает Claude Code, но и универсальные принципы harness-инжиниринга, применимые к любому агенту в любом домене.
 
-The lesson is not "copy Claude Code." The lesson is: **the best agent products are built by engineers who understand that their job is harness, not intelligence.**
+Урок не в том, чтобы "копировать Claude Code". Урок в следующем: **лучшие agent-продукты строят инженеры, понимающие, что их работа -- harness, а не интеллект.**
 
 ---
 
-## The Vision: Fill the Universe with Real Agents
+## Видение: наполнить вселенную настоящими агентами
 
-This is not just about coding agents.
+Речь не только о кодинг-агентах.
 
-Every domain where humans perform complex, multi-step, judgment-intensive work is a domain where agents can operate -- given the right harness. The patterns in this repository are universal:
+Каждый домен, где люди выполняют сложную, многошаговую работу с интенсивным принятием решений, -- это домен, в котором могут работать агенты, при наличии правильного harness. Шаблоны в этом репозитории универсальны:
 
 ```
 Estate management agent    = model + property sensors + maintenance tools + tenant comms
@@ -126,11 +125,11 @@ Manufacturing agent        = model + production line sensors + quality controls 
 Education agent            = model + curriculum knowledge + student progress + assessment tools
 ```
 
-The loop is always the same. The tools change. The knowledge changes. The permissions change. The agent -- the model -- generalizes.
+Цикл всегда одинаков. Tools меняются. Знания меняются. Permissions меняются. Агент -- модель -- обобщается.
 
-Every harness engineer reading this repository is learning patterns that apply far beyond software engineering. You are learning to build the infrastructure for an intelligent, automated future. Every well-designed harness deployed in a real domain is one more place where an agent can perceive, reason, and act.
+Каждый harness-инженер, читающий этот репозиторий, осваивает шаблоны, применимые далеко за пределами разработки ПО. Вы учитесь строить инфраструктуру для интеллектуального, автоматизированного будущего. Каждый хорошо спроектированный harness, развёрнутый в реальном домене, -- это ещё одно место, где агент может воспринимать, рассуждать и действовать.
 
-First we fill the workshops. Then the farms, the hospitals, the factories. Then the cities. Then the planet.
+Сначала мы заполним мастерские. Потом фермы, больницы, заводы. Потом города. Потом планету.
 
 **Bash is all you need. Real agents are all the universe needs.**
 
@@ -158,36 +157,36 @@ First we fill the workshops. Then the farms, the hospitals, the factories. Then 
     the harness that makes the agent effective in a specific domain.
 ```
 
-**12 progressive sessions, from a simple loop to isolated autonomous execution.**
-**Each session adds one harness mechanism. Each mechanism has one motto.**
+**12 последовательных сессий, от простого цикла до изолированного автономного исполнения.**
+**Каждая сессия добавляет один механизм harness. У каждого механизма есть свой девиз.**
 
-> **s01** &nbsp; *"One loop & Bash is all you need"* &mdash; one tool + one loop = an agent
+> **s01** &nbsp; *"One loop & Bash is all you need"* &mdash; один инструмент + один цикл = агент
 >
-> **s02** &nbsp; *"Adding a tool means adding one handler"* &mdash; the loop stays the same; new tools register into the dispatch map
+> **s02** &nbsp; *"Adding a tool means adding one handler"* &mdash; цикл остаётся прежним; новые инструменты регистрируются в карте диспетчеризации
 >
-> **s03** &nbsp; *"An agent without a plan drifts"* &mdash; list the steps first, then execute; completion doubles
+> **s03** &nbsp; *"An agent without a plan drifts"* &mdash; сначала перечисли шаги, потом выполняй; завершаемость удваивается
 >
-> **s04** &nbsp; *"Break big tasks down; each subtask gets a clean context"* &mdash; subagents use independent messages[], keeping the main conversation clean
+> **s04** &nbsp; *"Break big tasks down; each subtask gets a clean context"* &mdash; подагенты используют независимый `messages[]`, главный диалог остаётся чистым
 >
-> **s05** &nbsp; *"Load knowledge when you need it, not upfront"* &mdash; inject via tool_result, not the system prompt
+> **s05** &nbsp; *"Load knowledge when you need it, not upfront"* &mdash; инъекция через `tool_result`, а не через `system_prompt`
 >
-> **s06** &nbsp; *"Context will fill up; you need a way to make room"* &mdash; three-layer compression strategy for infinite sessions
+> **s06** &nbsp; *"Context will fill up; you need a way to make room"* &mdash; трёхуровневая стратегия сжатия для бесконечных сессий
 >
-> **s07** &nbsp; *"Break big goals into small tasks, order them, persist to disk"* &mdash; a file-based task graph with dependencies, laying the foundation for multi-agent collaboration
+> **s07** &nbsp; *"Break big goals into small tasks, order them, persist to disk"* &mdash; файловый граф задач с зависимостями, фундамент для мультиагентного взаимодействия
 >
-> **s08** &nbsp; *"Run slow operations in the background; the agent keeps thinking"* &mdash; daemon threads run commands, inject notifications on completion
+> **s08** &nbsp; *"Run slow operations in the background; the agent keeps thinking"* &mdash; daemon-потоки выполняют команды и инжектят уведомления по завершении
 >
-> **s09** &nbsp; *"When the task is too big for one, delegate to teammates"* &mdash; persistent teammates + async mailboxes
+> **s09** &nbsp; *"When the task is too big for one, delegate to teammates"* &mdash; постоянные тиммейты + асинхронные mailbox
 >
-> **s10** &nbsp; *"Teammates need shared communication rules"* &mdash; one request-response pattern drives all negotiation
+> **s10** &nbsp; *"Teammates need shared communication rules"* &mdash; один паттерн request-response управляет всеми переговорами
 >
-> **s11** &nbsp; *"Teammates scan the board and claim tasks themselves"* &mdash; no need for the lead to assign each one
+> **s11** &nbsp; *"Teammates scan the board and claim tasks themselves"* &mdash; ведущему не нужно назначать каждую задачу
 >
-> **s12** &nbsp; *"Each works in its own directory, no interference"* &mdash; tasks manage goals, worktrees manage directories, bound by ID
+> **s12** &nbsp; *"Each works in its own directory, no interference"* &mdash; tasks управляют целями, worktrees управляют директориями, связаны по ID
 
 ---
 
-## The Core Pattern
+## Базовый паттерн
 
 ```python
 def agent_loop(messages):
@@ -214,22 +213,22 @@ def agent_loop(messages):
         messages.append({"role": "user", "content": results})
 ```
 
-Every session layers one harness mechanism on top of this loop -- without changing the loop itself. The loop belongs to the agent. The mechanisms belong to the harness.
+Каждая сессия наслаивает один механизм harness поверх этого цикла -- не меняя сам цикл. Цикл принадлежит агенту. Механизмы принадлежат harness.
 
-## Scope (Important)
+## Область применения (важно)
 
-This repository is a 0->1 learning project for harness engineering -- building the environment that surrounds an agent model.
-It intentionally simplifies or omits several production mechanisms:
+Этот репозиторий -- учебный проект 0->1 по harness-инжинирингу: построение среды, окружающей модель агента.
+Он намеренно упрощает или опускает несколько production-механизмов:
 
-- Full event/hook buses (for example PreToolUse, SessionStart/End, ConfigChange).
-  s12 includes only a minimal append-only lifecycle event stream for teaching.
-- Rule-based permission governance and trust workflows
-- Session lifecycle controls (resume/fork) and advanced worktree lifecycle controls
-- Full MCP runtime details (transport/OAuth/resource subscribe/polling)
+- Полные шины событий/хуков (например, PreToolUse, SessionStart/End, ConfigChange).
+  s12 содержит лишь минимальный append-only поток событий жизненного цикла для учебных целей.
+- Управление permissions на основе правил и workflows доверия
+- Управление жизненным циклом сессий (resume/fork) и продвинутое управление жизненным циклом worktree
+- Полные детали runtime MCP (transport/OAuth/resource subscribe/polling)
 
-Treat the team JSONL mailbox protocol in this repo as a teaching implementation, not a claim about any specific production internals.
+Относитесь к JSONL-протоколу командного mailbox в этом репозитории как к учебной реализации, а не как к утверждению о каких-либо конкретных production-внутренностях.
 
-## Quick Start
+## Быстрый старт
 
 ```sh
 git clone https://github.com/shareAI-lab/learn-claude-code
@@ -242,15 +241,15 @@ python agents/s12_worktree_task_isolation.py  # Full progression endpoint
 python agents/s_full.py               # Capstone: all mechanisms combined
 ```
 
-### Web Platform
+### Веб-платформа
 
-Interactive visualizations, step-through diagrams, source viewer, and documentation.
+Интерактивные визуализации, пошаговые диаграммы, просмотрщик исходников и документация.
 
 ```sh
 cd web && npm install && npm run dev   # http://localhost:3000
 ```
 
-## Learning Path
+## Маршрут обучения
 
 ```
 Phase 1: THE LOOP                    Phase 2: PLANNING & KNOWLEDGE
@@ -284,24 +283,23 @@ s08  Background Tasks        [6]     s10  Team Protocols          [12]
                                      [N] = number of tools
 ```
 
-## Architecture
+## Архитектура
 
 ```
 learn-claude-code/
 |
 |-- agents/                        # Python reference implementations (s01-s12 + s_full capstone)
-|-- docs/{en,zh,ja}/               # Mental-model-first documentation (3 languages)
+|-- docs/                          # Mental-model-first documentation (3 languages)
 |-- web/                           # Interactive learning platform (Next.js)
 |-- skills/                        # Skill files for s05
 +-- .github/workflows/ci.yml      # CI: typecheck + build
 ```
 
-## Documentation
+## Документация
 
-Mental-model-first: problem, solution, ASCII diagram, minimal code.
-Available in [English](./docs/en/) | [中文](./docs/zh/) | [日本語](./docs/ja/).
+Сначала ментальная модель: проблема, решение, ASCII-диаграмма, минимальный код.
 
-| Session | Topic | Motto |
+| Сессия | Тема | Девиз |
 |---------|-------|-------|
 | [s01](./docs/en/s01-the-agent-loop.md) | The Agent Loop | *One loop & Bash is all you need* |
 | [s02](./docs/en/s02-tool-use.md) | Tool Use | *Adding a tool means adding one handler* |
@@ -316,62 +314,15 @@ Available in [English](./docs/en/) | [中文](./docs/zh/) | [日本語](./docs/j
 | [s11](./docs/en/s11-autonomous-agents.md) | Autonomous Agents | *Teammates scan the board and claim tasks themselves* |
 | [s12](./docs/en/s12-worktree-task-isolation.md) | Worktree + Task Isolation | *Each works in its own directory, no interference* |
 
-## What's Next -- from understanding to shipping
+## Что дальше -- от понимания к запуску
+После 12 сессий вы понимаете, как harness-инжиниринг работает изнутри. 
 
-After the 12 sessions you understand how harness engineering works inside out. Two ways to put that knowledge to work:
-
-### Kode Agent CLI -- Open-Source Coding Agent CLI
-
-> `npm i -g @shareai-lab/kode`
-
-Skill & LSP support, Windows-ready, pluggable with GLM / MiniMax / DeepSeek and other open models. Install and go.
-
-GitHub: **[shareAI-lab/Kode-cli](https://github.com/shareAI-lab/Kode-cli)**
-
-### Kode Agent SDK -- Embed Agent Capabilities in Your App
-
-The official Claude Code Agent SDK communicates with a full CLI process under the hood -- each concurrent user means a separate terminal process. Kode SDK is a standalone library with no per-user process overhead, embeddable in backends, browser extensions, embedded devices, or any runtime.
-
-GitHub: **[shareAI-lab/Kode-agent-sdk](https://github.com/shareAI-lab/Kode-agent-sdk)**
-
----
-
-## Sister Repo: from *on-demand sessions* to *always-on assistant*
-
-The harness this repo teaches is **use-and-discard** -- open a terminal, give the agent a task, close when done, next session starts blank. That is the Claude Code model.
-
-[OpenClaw](https://github.com/openclaw/openclaw) proved another possibility: on top of the same agent core, two harness mechanisms turn the agent from "poke it to make it move" into "it wakes up every 30 seconds to look for work":
-
-- **Heartbeat** -- every 30s the harness sends the agent a message to check if there is anything to do. Nothing? Go back to sleep. Something? Act immediately.
-- **Cron** -- the agent can schedule its own future tasks, executed automatically when the time comes.
-
-Add multi-channel IM routing (WhatsApp / Telegram / Slack / Discord, 13+ platforms), persistent context memory, and a Soul personality system, and the agent goes from a disposable tool to an always-on personal AI assistant.
-
-**[claw0](https://github.com/shareAI-lab/claw0)** is our companion teaching repo that deconstructs these harness mechanisms from scratch:
-
-```
-claw agent = agent core + heartbeat + cron + IM chat + memory + soul
-```
-
-```
-learn-claude-code                   claw0
-(agent harness core:                (proactive always-on harness:
- loop, tools, planning,              heartbeat, cron, IM channels,
- teams, worktree isolation)          memory, soul personality)
-```
-
-## About
-<img width="260" src="https://github.com/user-attachments/assets/fe8b852b-97da-4061-a467-9694906b5edf" /><br>
-
-Scan with WeChat to follow us,
-or follow on X: [shareAI-Lab](https://x.com/baicai003)
-
-## License
+## Лицензия
 
 MIT
 
 ---
 
-**Agency comes from the model. The harness makes agency real. Build great harnesses. The model will do the rest.**
+**Агентность исходит из модели. Harness делает агентность реальной. Стройте отличные harness. Остальное сделает модель.**
 
 **Bash is all you need. Real agents are all the universe needs.**

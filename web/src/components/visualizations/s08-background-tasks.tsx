@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useDarkMode, useSvgPalette } from "@/hooks/useDarkMode";
+import { useLocale } from "@/lib/i18n";
 
 interface StepInfo {
   title: string;
   description: string;
 }
 
-const STEP_INFO: StepInfo[] = [
+const STEP_INFO_EN: StepInfo[] = [
   {
     title: "Three Lanes",
     description:
@@ -47,6 +48,46 @@ const STEP_INFO: StepInfo[] = [
   },
 ];
 
+const STEP_INFO_RU: StepInfo[] = [
+  {
+    title: "Три дорожки",
+    description:
+      "У агента есть главный поток и возможность запускать daemon-потоки для параллельной работы.",
+  },
+  {
+    title: "Главный поток работает",
+    description:
+      "Главный цикл агента идёт как обычно, обрабатывая запросы пользователя.",
+  },
+  {
+    title: "Запуск фоновой задачи",
+    description:
+      "Фоновые задачи живут как daemon-потоки. Главный цикл их не ждёт.",
+  },
+  {
+    title: "Несколько фоновых задач",
+    description: "Несколько фоновых задач могут идти одновременно.",
+  },
+  {
+    title: "Задача завершается",
+    description:
+      "Фоновая задача отрабатывает. Её результат уходит в очередь уведомлений.",
+  },
+  {
+    title: "Очередь наполняется",
+    description:
+      "Результаты накапливаются в очереди, невидимые для модели на этом ходе.",
+  },
+  {
+    title: "Слив очереди",
+    description:
+      "Прямо перед следующим вызовом LLM все уведомления вшиваются как tool_result. Без блокировки, асинхронно.",
+  },
+];
+
+const STEP_INFO_ZH = STEP_INFO_EN;
+const STEP_INFO_JA = STEP_INFO_EN;
+
 const LANE_Y = {
   main: 60,
   bg1: 140,
@@ -70,7 +111,7 @@ interface WorkBlock {
   completesAtStep?: number;
 }
 
-const WORK_BLOCKS: WorkBlock[] = [
+const WORK_BLOCKS_EN: WorkBlock[] = [
   {
     lane: "main",
     startFraction: 0,
@@ -99,6 +140,15 @@ const WORK_BLOCKS: WorkBlock[] = [
   },
 ];
 
+const WORK_BLOCKS_RU: WorkBlock[] = [
+  { ...WORK_BLOCKS_EN[0], label: "Главный цикл агента" },
+  { ...WORK_BLOCKS_EN[1], label: "Прогнать тесты" },
+  { ...WORK_BLOCKS_EN[2], label: "Линт кода" },
+];
+
+const WORK_BLOCKS_ZH = WORK_BLOCKS_EN;
+const WORK_BLOCKS_JA = WORK_BLOCKS_EN;
+
 interface ForkArrow {
   fromFraction: number;
   toLane: "bg1" | "bg2";
@@ -117,7 +167,7 @@ interface QueueCard {
   drainsAtStep: number;
 }
 
-const QUEUE_CARDS: QueueCard[] = [
+const QUEUE_CARDS_EN: QueueCard[] = [
   {
     id: "lint-result",
     label: "Lint: 0 errors",
@@ -131,6 +181,14 @@ const QUEUE_CARDS: QueueCard[] = [
     drainsAtStep: 6,
   },
 ];
+
+const QUEUE_CARDS_RU: QueueCard[] = [
+  { ...QUEUE_CARDS_EN[0], label: "Lint: 0 ошибок" },
+  { ...QUEUE_CARDS_EN[1], label: "Тесты: 42 прошли" },
+];
+
+const QUEUE_CARDS_ZH = QUEUE_CARDS_EN;
+const QUEUE_CARDS_JA = QUEUE_CARDS_EN;
 
 function fractionToX(fraction: number): number {
   return TIMELINE_LEFT + fraction * TIMELINE_WIDTH;
@@ -161,6 +219,63 @@ export default function BackgroundTasks({ title }: { title?: string }) {
 
   const isDark = useDarkMode();
   const palette = useSvgPalette();
+  const locale = useLocale();
+  const STEP_INFO =
+    locale === "ru"
+      ? STEP_INFO_RU
+      : locale === "zh"
+        ? STEP_INFO_ZH
+        : locale === "ja"
+          ? STEP_INFO_JA
+          : STEP_INFO_EN;
+  const WORK_BLOCKS =
+    locale === "ru"
+      ? WORK_BLOCKS_RU
+      : locale === "zh"
+        ? WORK_BLOCKS_ZH
+        : locale === "ja"
+          ? WORK_BLOCKS_JA
+          : WORK_BLOCKS_EN;
+  const QUEUE_CARDS =
+    locale === "ru"
+      ? QUEUE_CARDS_RU
+      : locale === "zh"
+        ? QUEUE_CARDS_ZH
+        : locale === "ja"
+          ? QUEUE_CARDS_JA
+          : QUEUE_CARDS_EN;
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          time: "время",
+          mainThread: "Главный поток",
+          bg1: "Фон 1",
+          bg2: "Фон 2",
+          done: "готово",
+          llmCall: "Вызов LLM API",
+          notification: "Очередь",
+          queue: "уведомлений",
+          drained: "очередь слита — вошла в следующий вызов LLM",
+          legendMain: "Главный поток",
+          legendBg1: "Фон 1",
+          legendBg2: "Фон 2",
+          legendLlm: "Граница LLM",
+        }
+      : {
+          time: "time",
+          mainThread: "Main Thread",
+          bg1: "Background 1",
+          bg2: "Background 2",
+          done: "done",
+          llmCall: "LLM API call",
+          notification: "Notification",
+          queue: "Queue",
+          drained: "queue drained -- injected into next LLM call",
+          legendMain: "Main thread",
+          legendBg1: "Background 1",
+          legendBg2: "Background 2",
+          legendLlm: "LLM boundary",
+        };
 
   const stepInfo = STEP_INFO[currentStep];
 
@@ -237,15 +352,15 @@ export default function BackgroundTasks({ title }: { title?: string }) {
             fill={palette.labelFill}
             textAnchor="end"
           >
-            time
+            {inlineLabels.time}
           </text>
 
           {/* Lane backgrounds and labels */}
           {(
             [
-              { key: "main", y: LANE_Y.main, label: "Main Thread" },
-              { key: "bg1", y: LANE_Y.bg1, label: "Background 1" },
-              { key: "bg2", y: LANE_Y.bg2, label: "Background 2" },
+              { key: "main", y: LANE_Y.main, label: inlineLabels.mainThread },
+              { key: "bg1", y: LANE_Y.bg1, label: inlineLabels.bg1 },
+              { key: "bg2", y: LANE_Y.bg2, label: inlineLabels.bg2 },
             ] as const
           ).map(({ key, y, label }) => (
             <g key={key}>
@@ -335,7 +450,7 @@ export default function BackgroundTasks({ title }: { title?: string }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    done
+                    {inlineLabels.done}
                   </motion.text>
                 )}
               </motion.g>
@@ -399,7 +514,7 @@ export default function BackgroundTasks({ title }: { title?: string }) {
                 fontWeight="600"
                 fill="white"
               >
-                LLM API call
+                {inlineLabels.llmCall}
               </text>
             </motion.g>
           )}
@@ -423,7 +538,7 @@ export default function BackgroundTasks({ title }: { title?: string }) {
             fontWeight="600"
             fill={palette.labelFill}
           >
-            Notification
+            {inlineLabels.notification}
           </text>
           <text
             x={TIMELINE_LEFT - 10}
@@ -433,7 +548,7 @@ export default function BackgroundTasks({ title }: { title?: string }) {
             fontWeight="600"
             fill={palette.labelFill}
           >
-            Queue
+            {inlineLabels.queue}
           </text>
 
           {/* Queue cards */}
@@ -574,7 +689,7 @@ export default function BackgroundTasks({ title }: { title?: string }) {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
             >
-              queue drained -- injected into next LLM call
+              {inlineLabels.drained}
             </motion.text>
           )}
         </svg>
@@ -584,25 +699,25 @@ export default function BackgroundTasks({ title }: { title?: string }) {
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-3 rounded" style={{ background: "#8b5cf6" }} />
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
-              Main thread
+              {inlineLabels.legendMain}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-3 rounded" style={{ background: "#10b981" }} />
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
-              Background 1
+              {inlineLabels.legendBg1}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-3 rounded" style={{ background: "#3b82f6" }} />
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
-              Background 2
+              {inlineLabels.legendBg2}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-3 w-3 rounded" style={{ background: "#f59e0b" }} />
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
-              LLM boundary
+              {inlineLabels.legendLlm}
             </span>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useLocale, useTranslations } from "@/lib/i18n";
 import { LEARNING_PATH, VERSION_META } from "@/lib/constants";
+import { localizeMeta } from "@/lib/version-i18n";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { LayerBadge } from "@/components/ui/badge";
 import { CodeDiff } from "@/components/diff/code-diff";
@@ -15,14 +16,17 @@ const data = versionData as VersionIndex;
 
 export default function ComparePage() {
   const t = useTranslations("compare");
+  const tUi = useTranslations("ui");
+  const tVersion = useTranslations("version");
+  const tLayer = useTranslations("layer_labels");
   const locale = useLocale();
   const [versionA, setVersionA] = useState<string>("");
   const [versionB, setVersionB] = useState<string>("");
 
   const infoA = useMemo(() => data.versions.find((v) => v.id === versionA), [versionA]);
   const infoB = useMemo(() => data.versions.find((v) => v.id === versionB), [versionB]);
-  const metaA = versionA ? VERSION_META[versionA] : null;
-  const metaB = versionB ? VERSION_META[versionB] : null;
+  const metaA = versionA && VERSION_META[versionA] ? localizeMeta(VERSION_META[versionA], versionA, locale) : null;
+  const metaB = versionB && VERSION_META[versionB] ? localizeMeta(VERSION_META[versionB], versionB, locale) : null;
 
   const comparison = useMemo(() => {
     if (!infoA || !infoB) return null;
@@ -68,10 +72,10 @@ export default function ComparePage() {
             onChange={(e) => setVersionA(e.target.value)}
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
           >
-            <option value="">-- select --</option>
+            <option value="">{tUi("select_placeholder")}</option>
             {LEARNING_PATH.map((v) => (
               <option key={v} value={v}>
-                {v} - {VERSION_META[v]?.title}
+                {v} - {VERSION_META[v] && localizeMeta(VERSION_META[v], v, locale).title}
               </option>
             ))}
           </select>
@@ -88,10 +92,10 @@ export default function ComparePage() {
             onChange={(e) => setVersionB(e.target.value)}
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
           >
-            <option value="">-- select --</option>
+            <option value="">{tUi("select_placeholder")}</option>
             {LEARNING_PATH.map((v) => (
               <option key={v} value={v}>
-                {v} - {VERSION_META[v]?.title}
+                {v} - {VERSION_META[v] && localizeMeta(VERSION_META[v], v, locale).title}
               </option>
             ))}
           </select>
@@ -109,9 +113,9 @@ export default function ComparePage() {
                 <p className="text-sm text-zinc-500">{metaA?.subtitle}</p>
               </CardHeader>
               <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-                <p>{infoA.loc} LOC</p>
-                <p>{infoA.tools.length} tools</p>
-                {metaA && <LayerBadge layer={metaA.layer}>{metaA.layer}</LayerBadge>}
+                <p>{infoA.loc} {tVersion("loc")}</p>
+                <p>{infoA.tools.length} {tVersion("tools")}</p>
+                {metaA && <LayerBadge layer={metaA.layer}>{tLayer(metaA.layer)}</LayerBadge>}
               </div>
             </Card>
             <Card>
@@ -120,9 +124,9 @@ export default function ComparePage() {
                 <p className="text-sm text-zinc-500">{metaB?.subtitle}</p>
               </CardHeader>
               <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-                <p>{infoB.loc} LOC</p>
-                <p>{infoB.tools.length} tools</p>
-                {metaB && <LayerBadge layer={metaB.layer}>{metaB.layer}</LayerBadge>}
+                <p>{infoB.loc} {tVersion("loc")}</p>
+                <p>{infoB.tools.length} {tVersion("tools")}</p>
+                {metaB && <LayerBadge layer={metaB.layer}>{tLayer(metaB.layer)}</LayerBadge>}
               </div>
             </Card>
           </div>

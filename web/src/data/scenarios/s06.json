@@ -1,51 +1,51 @@
 {
   "version": "s06",
-  "title": "Compact",
-  "description": "Agent compresses context when tokens exceed threshold",
+  "title": "Сжатие",
+  "description": "Агент сжимает контекст, когда количество токенов превышает порог",
   "steps": [
     {
       "type": "user_message",
-      "content": "Analyze all Python files in this project and summarize each one",
-      "annotation": "A task that will generate large amounts of context"
+      "content": "Проанализируй все Python-файлы в этом проекте и кратко опиши каждый",
+      "annotation": "Задача, которая породит большой объём контекста"
     },
     {
       "type": "tool_call",
       "content": "find . -name '*.py' -type f",
       "toolName": "bash",
-      "annotation": "Finding all files to analyze"
+      "annotation": "Поиск всех файлов для анализа"
     },
     {
       "type": "tool_result",
       "content": "./src/main.py\n./src/utils.py\n./src/models.py\n./tests/test_main.py\n... (28 more files)",
       "toolName": "bash",
-      "annotation": "32 files found -- reading all of them will generate massive context"
+      "annotation": "Найдено 32 файла -- чтение всех породит огромный контекст"
     },
     {
       "type": "assistant_text",
-      "content": "I'll read and analyze each file systematically.",
-      "annotation": "Agent begins processing files one by one"
+      "content": "Я буду читать и анализировать каждый файл по очереди.",
+      "annotation": "Агент начинает обрабатывать файлы один за другим"
     },
     {
       "type": "tool_call",
       "content": "./src/main.py",
       "toolName": "read_file",
-      "annotation": "Reading file 1 of 32..."
+      "annotation": "Чтение файла 1 из 32..."
     },
     {
       "type": "tool_result",
       "content": "[... 450 lines of code ...]",
       "toolName": "read_file",
-      "annotation": "Large file content added to messages[]"
+      "annotation": "Большое содержимое файла добавлено в messages[]"
     },
     {
       "type": "system_event",
       "content": "[ContextManager] Token count: 148,231 / 150,000 threshold\nTriggering 3-layer compression:\n  1. Drop tool_result content > 1000 chars -> replaced with summary\n  2. Merge sequential assistant turns\n  3. Summarize oldest 50% of conversation\nResult: 148,231 -> 42,087 tokens",
-      "annotation": "Compression fires automatically when approaching the limit"
+      "annotation": "Сжатие срабатывает автоматически при приближении к лимиту"
     },
     {
       "type": "assistant_text",
-      "content": "Continuing analysis with compressed context. Files 1-18 have been summarized, proceeding with remaining files.",
-      "annotation": "Forgetting old tool results enables infinite work -- the agent can process any number of files"
+      "content": "Продолжаю анализ со сжатым контекстом. Файлы 1-18 уже обобщены, перехожу к оставшимся.",
+      "annotation": "Забывание старых результатов инструментов даёт бесконечную работу -- агент может обработать любое число файлов"
     }
   ]
 }

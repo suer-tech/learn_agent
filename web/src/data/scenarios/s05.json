@@ -1,44 +1,44 @@
 {
   "version": "s05",
-  "title": "Skills",
-  "description": "Agent loads external knowledge from SKILL.md files",
+  "title": "Навыки",
+  "description": "Агент загружает внешние знания из файлов SKILL.md",
   "steps": [
     {
       "type": "user_message",
-      "content": "Set up a new Next.js project with TypeScript",
-      "annotation": "Task requires framework-specific knowledge"
+      "content": "Подними новый Next.js проект с TypeScript",
+      "annotation": "Задача требует знаний о конкретном фреймворке"
     },
     {
       "type": "system_event",
       "content": "[SkillLoader] Scanning for SKILL.md files... Found: nextjs.SKILL.md",
-      "annotation": "SkillLoader finds a matching skill file before the loop runs"
+      "annotation": "SkillLoader находит подходящий файл навыка до запуска цикла"
     },
     {
       "type": "system_event",
       "content": "[Skill injected] nextjs.SKILL.md -> tool_result message appended",
-      "annotation": "Skill content is injected as a tool_result, not bloating the system prompt"
+      "annotation": "Содержимое навыка инжектится как tool_result, не раздувая системный промпт"
     },
     {
       "type": "assistant_text",
-      "content": "I have knowledge about Next.js setup. Let me create the project structure.",
-      "annotation": "Model now has framework-specific knowledge from the skill file"
+      "content": "У меня есть знания о настройке Next.js. Сейчас создам структуру проекта.",
+      "annotation": "Модель теперь имеет специфичные для фреймворка знания из файла навыка"
     },
     {
       "type": "tool_call",
       "content": "npx create-next-app@latest my-app --typescript --tailwind --eslint --app --src-dir",
       "toolName": "bash",
-      "annotation": "Using skill-provided knowledge for correct flags"
+      "annotation": "Используются предоставленные навыком знания о правильных флагах"
     },
     {
       "type": "tool_result",
       "content": "Success! Created my-app at /workspace/my-app",
       "toolName": "bash",
-      "annotation": "Project created with correct configuration"
+      "annotation": "Проект создан с правильной конфигурацией"
     },
     {
       "type": "assistant_text",
-      "content": "Next.js project created with TypeScript, Tailwind CSS, ESLint, App Router, and src/ directory.",
-      "annotation": "Skills inject via tool_result, not system prompt -- keeping context lean"
+      "content": "Проект Next.js создан с TypeScript, Tailwind CSS, ESLint, App Router и каталогом src/.",
+      "annotation": "Навыки инжектятся через tool_result, а не системный промпт -- контекст остаётся компактным"
     }
   ]
 }

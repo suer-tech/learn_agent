@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useSvgPalette } from "@/hooks/useDarkMode";
+import { useLocale } from "@/lib/i18n";
 
 type Protocol = "shutdown" | "plan";
 
@@ -23,19 +24,38 @@ const ARROW_Y_GAP = 70;
 const REQUEST_ID = "req_abc";
 
 // -- Shutdown protocol step definitions --
-const SHUTDOWN_STEPS = [
+const SHUTDOWN_STEPS_EN = [
   { title: "Structured Protocols", desc: "Protocols define structured message exchanges with correlated request IDs." },
   { title: "Shutdown Request", desc: "The leader initiates shutdown. The request_id links the request to its response." },
   { title: "Teammate Decides", desc: "The teammate can accept or reject. It's not a forced kill -- it's a polite request." },
   { title: "Approved", desc: "Same request_id in the response. Teammate exits cleanly." },
 ];
 
+const SHUTDOWN_STEPS_RU = [
+  { title: "Структурированные протоколы", desc: "Протоколы задают структурированный обмен сообщениями со связанными request_id." },
+  { title: "Запрос на shutdown", desc: "Лидер инициирует shutdown. request_id связывает запрос с ответом." },
+  { title: "Тиммейт решает", desc: "Тиммейт может принять или отклонить. Это не принудительный kill — это вежливая просьба." },
+  { title: "Одобрено", desc: "Тот же request_id в ответе. Тиммейт корректно завершается." },
+];
+
+const SHUTDOWN_STEPS_ZH = SHUTDOWN_STEPS_EN;
+const SHUTDOWN_STEPS_JA = SHUTDOWN_STEPS_EN;
+
 // -- Plan approval protocol step definitions --
-const PLAN_STEPS = [
+const PLAN_STEPS_EN = [
   { title: "Plan Approval", desc: "Teammates in plan_mode must get approval before implementing changes." },
   { title: "Submit Plan", desc: "The teammate designs a plan and sends it to the leader for review." },
   { title: "Leader Reviews", desc: "Leader reviews and approves or rejects with feedback. Same request-response pattern." },
 ];
+
+const PLAN_STEPS_RU = [
+  { title: "Утверждение плана", desc: "Тиммейты в plan_mode обязаны получить одобрение перед внесением правок." },
+  { title: "Отправить план", desc: "Тиммейт составляет план и отправляет лидеру на ревью." },
+  { title: "Лидер ревьюит", desc: "Лидер одобряет или отклоняет с обратной связью. Тот же шаблон запрос-ответ." },
+];
+
+const PLAN_STEPS_ZH = PLAN_STEPS_EN;
+const PLAN_STEPS_JA = PLAN_STEPS_EN;
 
 // Horizontal arrow between lifelines
 function SequenceArrow({
@@ -128,7 +148,7 @@ function SequenceArrow({
 }
 
 // Decision diamond on a lifeline
-function DecisionBox({ x, y }: { x: number; y: number }) {
+function DecisionBox({ x, y, approveLabel, rejectLabel }: { x: number; y: number; approveLabel: string; rejectLabel: string }) {
   const size = 14;
   return (
     <motion.g
@@ -146,10 +166,10 @@ function DecisionBox({ x, y }: { x: number; y: number }) {
         ?
       </text>
       <text x={x + size + 6} y={y - 4} fontSize={6} fontFamily="monospace" fill="#10b981">
-        approve
+        {approveLabel}
       </text>
       <text x={x + size + 6} y={y + 6} fontSize={6} fontFamily="monospace" fill="#ef4444">
-        reject
+        {rejectLabel}
       </text>
     </motion.g>
   );
@@ -185,6 +205,48 @@ function ActivationBar({
 export default function TeamProtocols({ title }: { title?: string }) {
   const [protocol, setProtocol] = useState<Protocol>("shutdown");
 
+  const locale = useLocale();
+  const SHUTDOWN_STEPS =
+    locale === "ru"
+      ? SHUTDOWN_STEPS_RU
+      : locale === "zh"
+        ? SHUTDOWN_STEPS_ZH
+        : locale === "ja"
+          ? SHUTDOWN_STEPS_JA
+          : SHUTDOWN_STEPS_EN;
+  const PLAN_STEPS =
+    locale === "ru"
+      ? PLAN_STEPS_RU
+      : locale === "zh"
+        ? PLAN_STEPS_ZH
+        : locale === "ja"
+          ? PLAN_STEPS_JA
+          : PLAN_STEPS_EN;
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          shutdownTab: "Протокол shutdown",
+          planTab: "Протокол утверждения плана",
+          leader: "Лидер",
+          teammate: "Тиммейт",
+          approve: "одобрить",
+          reject: "отклонить",
+          exit: "exit",
+          planTitle: "План:",
+          planLines: ["1. Добавить обработчик ошибок", "2. Обновить тесты", "3. Отрефакторить модуль"],
+        }
+      : {
+          shutdownTab: "Shutdown Protocol",
+          planTab: "Plan Approval Protocol",
+          leader: "Leader",
+          teammate: "Teammate",
+          approve: "approve",
+          reject: "reject",
+          exit: "exit",
+          planTitle: "Plan:",
+          planLines: ["1. Add error handler", "2. Update tests", "3. Refactor module"],
+        };
+
   const totalSteps = protocol === "shutdown" ? SHUTDOWN_STEPS.length : PLAN_STEPS.length;
   const steps = protocol === "shutdown" ? SHUTDOWN_STEPS : PLAN_STEPS;
 
@@ -197,8 +259,8 @@ export default function TeamProtocols({ title }: { title?: string }) {
     vis.reset();
   };
 
-  const leftLabel = protocol === "shutdown" ? "Leader" : "Leader";
-  const rightLabel = protocol === "shutdown" ? "Teammate" : "Teammate";
+  const leftLabel = inlineLabels.leader;
+  const rightLabel = inlineLabels.teammate;
 
   return (
     <section className="space-y-4">
@@ -216,7 +278,7 @@ export default function TeamProtocols({ title }: { title?: string }) {
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
             }`}
           >
-            Shutdown Protocol
+            {inlineLabels.shutdownTab}
           </button>
           <button
             onClick={() => switchProtocol("plan")}
@@ -226,7 +288,7 @@ export default function TeamProtocols({ title }: { title?: string }) {
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
             }`}
           >
-            Plan Approval Protocol
+            {inlineLabels.planTab}
           </button>
         </div>
 
@@ -317,6 +379,8 @@ export default function TeamProtocols({ title }: { title?: string }) {
                   <DecisionBox
                     x={LIFELINE_RIGHT_X + 50}
                     y={ARROW_Y_START + ARROW_Y_GAP}
+                    approveLabel={inlineLabels.approve}
+                    rejectLabel={inlineLabels.reject}
                   />
                 )}
 
@@ -364,7 +428,7 @@ export default function TeamProtocols({ title }: { title?: string }) {
                       fill="#ef4444"
                       fontWeight={600}
                     >
-                      exit
+                      {inlineLabels.exit}
                     </text>
                   </motion.g>
                 )}
@@ -423,16 +487,16 @@ export default function TeamProtocols({ title }: { title?: string }) {
                       strokeWidth={0.5}
                     />
                     <text x={28} y={ARROW_Y_START + 34} fontSize={6} fontFamily="monospace" fill={palette.nodeText} fontWeight={600}>
-                      Plan:
+                      {inlineLabels.planTitle}
                     </text>
                     <text x={28} y={ARROW_Y_START + 44} fontSize={5.5} fontFamily="monospace" fill={palette.labelFill}>
-                      1. Add error handler
+                      {inlineLabels.planLines[0]}
                     </text>
                     <text x={28} y={ARROW_Y_START + 54} fontSize={5.5} fontFamily="monospace" fill={palette.labelFill}>
-                      2. Update tests
+                      {inlineLabels.planLines[1]}
                     </text>
                     <text x={28} y={ARROW_Y_START + 64} fontSize={5.5} fontFamily="monospace" fill={palette.labelFill}>
-                      3. Refactor module
+                      {inlineLabels.planLines[2]}
                     </text>
                   </motion.g>
                 )}

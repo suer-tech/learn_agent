@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
+import { useLocale } from "@/lib/i18n";
 
 // -- Task definitions --
 
@@ -15,7 +16,7 @@ interface Task {
 }
 
 // Snapshot of all 4 tasks at each step
-const TASK_STATES: Task[][] = [
+const TASK_STATES_EN: Task[][] = [
   // Step 0: all pending
   [
     { id: 1, label: "Write auth tests", status: "pending" },
@@ -67,6 +68,20 @@ const TASK_STATES: Task[][] = [
   ],
 ];
 
+const RU_LABELS: Record<number, string> = {
+  1: "Написать тесты для auth",
+  2: "Починить мобильную вёрстку",
+  3: "Добавить обработку ошибок",
+  4: "Обновить загрузчик конфига",
+};
+
+const TASK_STATES_RU: Task[][] = TASK_STATES_EN.map((step) =>
+  step.map((t) => ({ ...t, label: RU_LABELS[t.id] ?? t.label })),
+);
+
+const TASK_STATES_ZH = TASK_STATES_EN;
+const TASK_STATES_JA = TASK_STATES_EN;
+
 // Nag timer value at each step (out of 3)
 const NAG_TIMER_PER_STEP = [0, 1, 2, 3, 0, 0, 0];
 const NAG_THRESHOLD = 3;
@@ -75,7 +90,7 @@ const NAG_THRESHOLD = 3;
 const NAG_FIRES_PER_STEP = [false, false, false, true, false, false, false];
 
 // Step annotations
-const STEP_INFO = [
+const STEP_INFO_EN = [
   { title: "The Plan", desc: "TodoWrite gives the model a visible plan. All tasks start as pending." },
   { title: "Round 1 -- Idle", desc: "The model does work but doesn't touch its todos. The nag counter increments." },
   { title: "Round 2 -- Still Idle", desc: "Two rounds without progress. Pressure builds." },
@@ -84,6 +99,19 @@ const STEP_INFO = [
   { title: "Self-Directed", desc: "Once the model learns the pattern, it picks up tasks voluntarily." },
   { title: "Mission Accomplished", desc: "Visible plan + nag pressure = reliable task completion." },
 ];
+
+const STEP_INFO_RU = [
+  { title: "План", desc: "TodoWrite даёт модели видимый план. Все задачи стартуют в статусе pending." },
+  { title: "Раунд 1 — простой", desc: "Модель работает, но не трогает свои todo. Счётчик «пиления» увеличивается." },
+  { title: "Раунд 2 — всё ещё простой", desc: "Два раунда без прогресса. Давление растёт." },
+  { title: "ПИЛИМ!", desc: "Порог достигнут! Вшивается system-сообщение: «У тебя есть pending-задачи. Возьми одну сейчас!»" },
+  { title: "Задача готова", desc: "Модель завершает задачу. Таймер остаётся на 0 — работа по todo сбрасывает счётчик." },
+  { title: "Самостоятельно", desc: "Поняв шаблон, модель сама берёт задачи без напоминаний." },
+  { title: "Миссия выполнена", desc: "Видимый план + давление-«пиление» = надёжное завершение задач." },
+];
+
+const STEP_INFO_ZH = STEP_INFO_EN;
+const STEP_INFO_JA = STEP_INFO_EN;
 
 // -- Column component --
 
@@ -168,7 +196,7 @@ function TaskCard({ task }: { task: Task }) {
 
 // -- Nag gauge --
 
-function NagGauge({ value, max, firing }: { value: number; max: number; firing: boolean }) {
+function NagGauge({ value, max, firing, label }: { value: number; max: number; firing: boolean; label: string }) {
   const pct = Math.min((value / max) * 100, 100);
 
   const barColor =
@@ -184,7 +212,7 @@ function NagGauge({ value, max, firing }: { value: number; max: number; firing: 
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
-          Nag Timer
+          {label}
         </span>
         <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
           {value}/{max}
@@ -229,6 +257,41 @@ export default function TodoWrite({ title }: { title?: string }) {
     toggleAutoPlay,
   } = useSteppedVisualization({ totalSteps: 7, autoPlayInterval: 2500 });
 
+  const locale = useLocale();
+  const TASK_STATES =
+    locale === "ru"
+      ? TASK_STATES_RU
+      : locale === "zh"
+        ? TASK_STATES_ZH
+        : locale === "ja"
+          ? TASK_STATES_JA
+          : TASK_STATES_EN;
+  const STEP_INFO =
+    locale === "ru"
+      ? STEP_INFO_RU
+      : locale === "zh"
+        ? STEP_INFO_ZH
+        : locale === "ja"
+          ? STEP_INFO_JA
+          : STEP_INFO_EN;
+  const labels =
+    locale === "ru"
+      ? {
+          nagTimer: "Таймер пиления",
+          systemNag: 'SYSTEM: «У тебя есть pending-задачи. Возьми одну сейчас!»',
+          pending: "Ожидают",
+          inProgress: "В работе",
+          done: "Готово",
+          progress: (d: number, t: number) => `Прогресс: ${d}/${t} готово`,
+        }
+      : {
+          nagTimer: "Nag Timer",
+          systemNag: 'SYSTEM: "You have pending tasks. Pick one up now!"',
+          pending: "Pending",
+          inProgress: "In Progress",
+          done: "Done",
+          progress: (d: number, t: number) => `Progress: ${d}/${t} complete`,
+        };
   const tasks = TASK_STATES[currentStep];
   const nagValue = NAG_TIMER_PER_STEP[currentStep];
   const nagFires = NAG_FIRES_PER_STEP[currentStep];
@@ -247,7 +310,7 @@ export default function TodoWrite({ title }: { title?: string }) {
       <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
         {/* Nag gauge + nag message */}
         <div className="mb-4 space-y-2">
-          <NagGauge value={nagValue} max={NAG_THRESHOLD} firing={nagFires} />
+          <NagGauge value={nagValue} max={NAG_THRESHOLD} firing={nagFires} label={labels.nagTimer} />
 
           <AnimatePresence>
             {nagFires && (
@@ -257,7 +320,7 @@ export default function TodoWrite({ title }: { title?: string }) {
                 exit={{ opacity: 0, y: -8, height: 0 }}
                 className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-center text-xs font-bold text-red-700 dark:border-red-700 dark:bg-red-950/30 dark:text-red-300"
               >
-                SYSTEM: "You have pending tasks. Pick one up now!"
+                {labels.systemNag}
               </motion.div>
             )}
           </AnimatePresence>
@@ -266,19 +329,19 @@ export default function TodoWrite({ title }: { title?: string }) {
         {/* Kanban board */}
         <div className="flex gap-3">
           <KanbanColumn
-            title="Pending"
+            title={labels.pending}
             tasks={pendingTasks}
             accentClass="bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
             headerBg="bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
           />
           <KanbanColumn
-            title="In Progress"
+            title={labels.inProgress}
             tasks={inProgressTasks}
             accentClass="bg-amber-200 text-amber-700 dark:bg-amber-800 dark:text-amber-200"
             headerBg="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
           />
           <KanbanColumn
-            title="Done"
+            title={labels.done}
             tasks={doneTasks}
             accentClass="bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-200"
             headerBg="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
@@ -288,7 +351,7 @@ export default function TodoWrite({ title }: { title?: string }) {
         {/* Progress summary */}
         <div className="mt-3 flex items-center justify-between rounded-md bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
           <span className="font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
-            Progress: {doneTasks.length}/{tasks.length} complete
+            {labels.progress(doneTasks.length, tasks.length)}
           </span>
           <div className="flex gap-0.5">
             {tasks.map((t) => (

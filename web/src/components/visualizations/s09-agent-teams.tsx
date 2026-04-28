@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useSvgPalette } from "@/hooks/useDarkMode";
+import { useLocale } from "@/lib/i18n";
 
 // -- Layout constants --
 const SVG_W = 560;
@@ -11,11 +12,20 @@ const SVG_H = 340;
 const AGENT_R = 40;
 
 // Agent positions: inverted triangle (Lead top-center, Coder bottom-left, Reviewer bottom-right)
-const AGENTS = [
+const AGENTS_EN = [
   { id: "lead", label: "Lead", cx: SVG_W / 2, cy: 70, inbox: "lead.jsonl" },
   { id: "coder", label: "Coder", cx: 140, cy: 230, inbox: "coder.jsonl" },
   { id: "reviewer", label: "Reviewer", cx: SVG_W - 140, cy: 230, inbox: "reviewer.jsonl" },
 ] as const;
+
+const AGENTS_RU = [
+  { id: "lead", label: "Лид", cx: SVG_W / 2, cy: 70, inbox: "lead.jsonl" },
+  { id: "coder", label: "Кодер", cx: 140, cy: 230, inbox: "coder.jsonl" },
+  { id: "reviewer", label: "Ревьюер", cx: SVG_W - 140, cy: 230, inbox: "reviewer.jsonl" },
+] as const;
+
+const AGENTS_ZH = AGENTS_EN;
+const AGENTS_JA = AGENTS_EN;
 
 // Inbox tray dimensions, positioned below each agent circle
 const TRAY_W = 72;
@@ -26,17 +36,19 @@ const TRAY_OFFSET_Y = AGENT_R + 14;
 const MSG_W = 60;
 const MSG_H = 20;
 
-function agentById(id: string) {
-  return AGENTS.find((a) => a.id === id)!;
+type AgentList = readonly { id: string; label: string; cx: number; cy: number; inbox: string }[];
+
+function agentByIdIn(list: AgentList, id: string) {
+  return list.find((a) => a.id === id)!;
 }
 
-function trayCenter(id: string) {
-  const a = agentById(id);
+function trayCenterIn(list: AgentList, id: string) {
+  const a = agentByIdIn(list, id);
   return { x: a.cx, y: a.cy + TRAY_OFFSET_Y + TRAY_H / 2 };
 }
 
 // Step configuration
-const STEPS = [
+const STEPS_EN = [
   { title: "The Team", desc: "Teams use a leader-worker pattern. Each teammate has a file-based mailbox inbox." },
   { title: "Lead Assigns Work", desc: "Communication is async: write a message to the recipient's .jsonl inbox file." },
   { title: "Read Inbox", desc: "Teammates poll their inbox before each LLM call. New messages become context." },
@@ -45,6 +57,19 @@ const STEPS = [
   { title: "Feedback Loop", desc: "The mailbox pattern supports any communication topology: linear, broadcast, round-robin." },
   { title: "File-Based Coordination", desc: "No shared memory, no locks. All coordination through append-only files. Simple, robust, debuggable." },
 ];
+
+const STEPS_RU = [
+  { title: "Команда", desc: "Команды используют паттерн лидер-исполнители. У каждого тиммейта свой файл-почтовый ящик." },
+  { title: "Лид раздаёт задачи", desc: "Связь асинхронная: запиши сообщение в .jsonl-инбокс получателя." },
+  { title: "Чтение входящих", desc: "Тиммейты опрашивают свой инбокс перед каждым вызовом LLM. Новые сообщения попадают в контекст." },
+  { title: "Независимая работа", desc: "Каждый тиммейт крутит свой собственный цикл агента." },
+  { title: "Передача результата", desc: "Результаты идут по тому же механизму ящиков. Вся связь — через файлы." },
+  { title: "Цикл обратной связи", desc: "Шаблон с ящиками поддерживает любую топологию связи: линейную, broadcast, round-robin." },
+  { title: "Координация через файлы", desc: "Ни shared memory, ни локов. Координация через append-only файлы. Просто, надёжно, отлаживаемо." },
+];
+
+const STEPS_ZH = STEPS_EN;
+const STEPS_JA = STEPS_EN;
 
 // Helper: determine which agent glows at each step
 function agentGlows(agentId: string, step: number): boolean {
@@ -112,9 +137,9 @@ function TravelingMessage({
 }
 
 // Faded trace line between two agents
-function TraceLine({ from, to, strokeColor }: { from: string; to: string; strokeColor: string }) {
-  const f = trayCenter(from);
-  const t = trayCenter(to);
+function TraceLine({ from, to, strokeColor, agents }: { from: string; to: string; strokeColor: string; agents: AgentList }) {
+  const f = trayCenterIn(agents, from);
+  const t = trayCenterIn(agents, to);
   return (
     <motion.line
       x1={f.x}
@@ -132,9 +157,31 @@ function TraceLine({ from, to, strokeColor }: { from: string; to: string; stroke
 }
 
 export default function AgentTeams({ title }: { title?: string }) {
-  const vis = useSteppedVisualization({ totalSteps: STEPS.length, autoPlayInterval: 2500 });
+  const vis = useSteppedVisualization({ totalSteps: STEPS_EN.length, autoPlayInterval: 2500 });
   const step = vis.currentStep;
   const palette = useSvgPalette();
+  const locale = useLocale();
+  const AGENTS: AgentList =
+    locale === "ru" ? AGENTS_RU : locale === "zh" ? AGENTS_ZH : locale === "ja" ? AGENTS_JA : AGENTS_EN;
+  const STEPS =
+    locale === "ru" ? STEPS_RU : locale === "zh" ? STEPS_ZH : locale === "ja" ? STEPS_JA : STEPS_EN;
+  const agentById = (id: string) => agentByIdIn(AGENTS, id);
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          taskLogin: "task:login",
+          resultDone: "result:done",
+          feedback: "обр.связь",
+          teamConfigTitle: "team.config",
+          teamConfigBody: "workers: [coder, reviewer]",
+        }
+      : {
+          taskLogin: "task:login",
+          resultDone: "result:done",
+          feedback: "feedback",
+          teamConfigTitle: "team.config",
+          teamConfigBody: "workers: [coder, reviewer]",
+        };
 
   return (
     <section className="space-y-4">
@@ -159,9 +206,9 @@ export default function AgentTeams({ title }: { title?: string }) {
               {/* Step 6: trace lines */}
               {step === 6 && (
                 <>
-                  <TraceLine from="lead" to="coder" strokeColor={palette.edgeStroke} />
-                  <TraceLine from="coder" to="reviewer" strokeColor={palette.edgeStroke} />
-                  <TraceLine from="reviewer" to="lead" strokeColor={palette.edgeStroke} />
+                  <TraceLine from="lead" to="coder" strokeColor={palette.edgeStroke} agents={AGENTS} />
+                  <TraceLine from="coder" to="reviewer" strokeColor={palette.edgeStroke} agents={AGENTS} />
+                  <TraceLine from="reviewer" to="lead" strokeColor={palette.edgeStroke} agents={AGENTS} />
                 </>
               )}
 
@@ -239,10 +286,10 @@ export default function AgentTeams({ title }: { title?: string }) {
                 >
                   <rect x={12} y={12} width={100} height={44} rx={4} fill="#f0f9ff" stroke="#bae6fd" strokeWidth={1} />
                   <text x={20} y={28} fontSize={7} fontFamily="monospace" fill="#0284c7" fontWeight={600}>
-                    team.config
+                    {inlineLabels.teamConfigTitle}
                   </text>
                   <text x={20} y={40} fontSize={6} fontFamily="monospace" fill="#0369a1">
-                    workers: [coder, reviewer]
+                    {inlineLabels.teamConfigBody}
                   </text>
                 </motion.g>
               )}
@@ -256,7 +303,7 @@ export default function AgentTeams({ title }: { title?: string }) {
                     fromY={agentById("lead").cy + AGENT_R}
                     toX={agentById("coder").cx}
                     toY={agentById("coder").cy + TRAY_OFFSET_Y + TRAY_H / 2}
-                    label="task:login"
+                    label={inlineLabels.taskLogin}
                   />
                 )}
               </AnimatePresence>
@@ -270,7 +317,7 @@ export default function AgentTeams({ title }: { title?: string }) {
                     fromY={agentById("coder").cy + TRAY_OFFSET_Y + TRAY_H / 2}
                     toX={agentById("coder").cx}
                     toY={agentById("coder").cy}
-                    label="task:login"
+                    label={inlineLabels.taskLogin}
                   />
                 )}
               </AnimatePresence>
@@ -301,7 +348,7 @@ export default function AgentTeams({ title }: { title?: string }) {
                       fontSize={8}
                       fontWeight={600}
                     >
-                      result:done
+                      {inlineLabels.resultDone}
                     </text>
                   </motion.g>
                 )}
@@ -316,7 +363,7 @@ export default function AgentTeams({ title }: { title?: string }) {
                     fromY={agentById("coder").cy}
                     toX={agentById("reviewer").cx}
                     toY={agentById("reviewer").cy + TRAY_OFFSET_Y + TRAY_H / 2}
-                    label="result:done"
+                    label={inlineLabels.resultDone}
                   />
                 )}
               </AnimatePresence>
@@ -331,7 +378,7 @@ export default function AgentTeams({ title }: { title?: string }) {
                       fromY={agentById("reviewer").cy + TRAY_OFFSET_Y + TRAY_H / 2}
                       toX={agentById("reviewer").cx}
                       toY={agentById("reviewer").cy}
-                      label="result:done"
+                      label={inlineLabels.resultDone}
                       delay={0}
                     />
                     <TravelingMessage
@@ -340,7 +387,7 @@ export default function AgentTeams({ title }: { title?: string }) {
                       fromY={agentById("reviewer").cy}
                       toX={agentById("lead").cx}
                       toY={agentById("lead").cy + TRAY_OFFSET_Y + TRAY_H / 2}
-                      label="feedback"
+                      label={inlineLabels.feedback}
                       delay={1.0}
                     />
                   </>

@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
+import { useLocale } from "@/lib/i18n";
 
 interface SkillEntry {
   name: string;
@@ -11,7 +12,7 @@ interface SkillEntry {
   content: string[];
 }
 
-const SKILLS: SkillEntry[] = [
+const SKILLS_EN: SkillEntry[] = [
   {
     name: "/commit",
     summary: "Create git commits following repo conventions",
@@ -58,10 +59,60 @@ const SKILLS: SkillEntry[] = [
   },
 ];
 
+const SKILLS_RU: SkillEntry[] = [
+  {
+    name: "/commit",
+    summary: "Создать git-коммит по соглашениям репозитория",
+    fullTokens: 320,
+    content: [
+      "1. Запустить git status + git diff, чтобы увидеть изменения",
+      "2. Проанализировать стейджинг и составить сообщение",
+      "3. Создать коммит с трейлером Co-Authored-By",
+      "4. После коммита запустить git status для проверки",
+    ],
+  },
+  {
+    name: "/review-pr",
+    summary: "Ревью pull request на баги и стиль",
+    fullTokens: 480,
+    content: [
+      "1. Получить diff PR через gh pr view",
+      "2. Разобрать изменения по файлам в поисках проблем",
+      "3. Проверить баги, безопасность и стилистику",
+      "4. Опубликовать комментарии через gh pr review",
+    ],
+  },
+  {
+    name: "/test",
+    summary: "Запустить и проанализировать тесты",
+    fullTokens: 290,
+    content: [
+      "1. Определить тест-фреймворк по package.json",
+      "2. Запустить тесты и собрать вывод",
+      "3. Разобрать падения и предложить фиксы",
+      "4. Перезапустить тесты после правок",
+    ],
+  },
+  {
+    name: "/deploy",
+    summary: "Деплой приложения в целевое окружение",
+    fullTokens: 350,
+    content: [
+      "1. Убедиться, что все тесты проходят",
+      "2. Собрать продакшн-бандл",
+      "3. Отправить в целевой деплой через CI",
+      "4. Проверить healthcheck по адресу деплоя",
+    ],
+  },
+];
+
+const SKILLS_ZH = SKILLS_EN;
+const SKILLS_JA = SKILLS_EN;
+
 const TOKEN_STATES = [120, 120, 440, 440, 780, 780];
 const MAX_TOKEN_DISPLAY = 1000;
 
-const STEPS = [
+const STEPS_EN = [
   {
     title: "Layer 1: Compact Summaries",
     description:
@@ -94,6 +145,42 @@ const STEPS = [
   },
 ];
 
+const STEPS_RU = [
+  {
+    title: "Слой 1: Компактные сводки",
+    description:
+      "Все навыки кратко описаны в system prompt. Компактно, всегда под рукой.",
+  },
+  {
+    title: "Вызов навыка",
+    description:
+      "Модель распознаёт вызов навыка и запускает инструмент Skill.",
+  },
+  {
+    title: "Слой 2: Полная подгрузка",
+    description:
+      "Полные инструкции навыка приходят как tool_result, а не в system prompt.",
+  },
+  {
+    title: "Теперь в контексте",
+    description:
+      "Детальные инструкции выглядят как ответ инструмента. Модель чётко им следует.",
+  },
+  {
+    title: "Стек навыков",
+    description:
+      "Можно подгружать несколько навыков. Постоянны только сводки; полный текст приходит и уходит.",
+  },
+  {
+    title: "Двухслойная архитектура",
+    description:
+      "Слой 1: всегда здесь, крошечный. Слой 2: подгружается по запросу, подробный. Элегантное разделение.",
+  },
+];
+
+const STEPS_ZH = STEPS_EN;
+const STEPS_JA = STEPS_EN;
+
 export default function SkillLoading({ title }: { title?: string }) {
   const {
     currentStep,
@@ -103,7 +190,41 @@ export default function SkillLoading({ title }: { title?: string }) {
     reset,
     isPlaying,
     toggleAutoPlay,
-  } = useSteppedVisualization({ totalSteps: STEPS.length, autoPlayInterval: 2500 });
+  } = useSteppedVisualization({ totalSteps: STEPS_EN.length, autoPlayInterval: 2500 });
+
+  const locale = useLocale();
+  const SKILLS =
+    locale === "ru" ? SKILLS_RU : locale === "zh" ? SKILLS_ZH : locale === "ja" ? SKILLS_JA : SKILLS_EN;
+  const STEPS =
+    locale === "ru" ? STEPS_RU : locale === "zh" ? STEPS_ZH : locale === "ja" ? STEPS_JA : STEPS_EN;
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          systemPrompt: "System Prompt",
+          alwaysPresent: "всегда подгружен",
+          availableSkills: "# Доступные навыки",
+          userTypes: "Пользователь вводит:",
+          mechanismNote:
+            "Инструмент Skill возвращает контент как tool_result. Модель видит его в контексте и следует инструкциям. Никакого раздувания system prompt.",
+          layer1: "СЛОЙ 1",
+          layer1Desc: "Всегда в контексте, ~120 токенов",
+          layer2: "СЛОЙ 2",
+          layer2Desc: "По запросу, ~300–500 токенов на каждый",
+          tokens: "Токены",
+        }
+      : {
+          systemPrompt: "System Prompt",
+          alwaysPresent: "always present",
+          availableSkills: "# Available Skills",
+          userTypes: "User types:",
+          mechanismNote:
+            "The Skill tool returns content as a tool_result message. The model sees it in context and follows the instructions. No system prompt bloat.",
+          layer1: "LAYER 1",
+          layer1Desc: "Always present, ~120 tokens",
+          layer2: "LAYER 2",
+          layer2Desc: "On demand, ~300-500 tokens each",
+          tokens: "Tokens",
+        };
 
   const tokenCount = TOKEN_STATES[currentStep];
   const highlightedSkill = currentStep >= 1 && currentStep <= 3 ? 0 : currentStep >= 4 ? 1 : -1;
@@ -129,15 +250,15 @@ export default function SkillLoading({ title }: { title?: string }) {
               <div className="mb-2 flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-zinc-400" />
                 <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                  System Prompt
+                  {inlineLabels.systemPrompt}
                 </span>
                 <span className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 dark:bg-zinc-800">
-                  always present
+                  {inlineLabels.alwaysPresent}
                 </span>
               </div>
               <div className="rounded-lg border border-zinc-300 bg-zinc-900 p-4 dark:border-zinc-600">
                 <div className="mb-2 font-mono text-[10px] text-zinc-500">
-                  # Available Skills
+                  {inlineLabels.availableSkills}
                 </div>
                 <div className="space-y-1.5">
                   {SKILLS.map((skill, i) => {
@@ -179,7 +300,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                   className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/30"
                 >
                   <span className="text-xs text-blue-600 dark:text-blue-400">
-                    User types:
+                    {inlineLabels.userTypes}
                   </span>
                   <code className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
                     /commit
@@ -194,7 +315,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                   className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/30"
                 >
                   <span className="text-xs text-blue-600 dark:text-blue-400">
-                    User types:
+                    {inlineLabels.userTypes}
                   </span>
                   <code className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
                     /review-pr
@@ -316,9 +437,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                   exit={{ opacity: 0 }}
                   className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
                 >
-                  The Skill tool returns content as a tool_result message.
-                  The model sees it in context and follows the instructions.
-                  No system prompt bloat.
+                  {inlineLabels.mechanismNote}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -334,18 +453,18 @@ export default function SkillLoading({ title }: { title?: string }) {
                 >
                   <div className="flex-1 rounded border border-zinc-200 bg-zinc-50 p-2 text-center dark:border-zinc-700 dark:bg-zinc-800">
                     <div className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400">
-                      LAYER 1
+                      {inlineLabels.layer1}
                     </div>
                     <div className="text-xs text-zinc-600 dark:text-zinc-300">
-                      Always present, ~120 tokens
+                      {inlineLabels.layer1Desc}
                     </div>
                   </div>
                   <div className="flex-1 rounded border border-blue-200 bg-blue-50 p-2 text-center dark:border-blue-700 dark:bg-blue-900/20">
                     <div className="text-[10px] font-semibold text-blue-500 dark:text-blue-400">
-                      LAYER 2
+                      {inlineLabels.layer2}
                     </div>
                     <div className="text-xs text-blue-600 dark:text-blue-300">
-                      On demand, ~300-500 tokens each
+                      {inlineLabels.layer2Desc}
                     </div>
                   </div>
                 </motion.div>
@@ -356,7 +475,7 @@ export default function SkillLoading({ title }: { title?: string }) {
           {/* Token Gauge (vertical bar on the right) */}
           <div className="flex w-16 flex-col items-center">
             <div className="mb-1 text-center font-mono text-[10px] text-zinc-400">
-              Tokens
+              {inlineLabels.tokens}
             </div>
             <div
               className="relative w-8 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800"

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useSvgPalette } from "@/hooks/useDarkMode";
+import { useLocale } from "@/lib/i18n";
 
 // -- Flowchart node definitions --
 
@@ -17,7 +18,7 @@ interface FlowNode {
   type: "rect" | "diamond";
 }
 
-const NODES: FlowNode[] = [
+const NODES_EN: FlowNode[] = [
   { id: "start", label: "Start", x: 160, y: 30, w: 120, h: 40, type: "rect" },
   { id: "api_call", label: "API Call", x: 160, y: 110, w: 120, h: 40, type: "rect" },
   { id: "check", label: "stop_reason?", x: 160, y: 200, w: 140, h: 50, type: "diamond" },
@@ -25,6 +26,18 @@ const NODES: FlowNode[] = [
   { id: "append", label: "Append Result", x: 160, y: 380, w: 120, h: 40, type: "rect" },
   { id: "end", label: "Break / Done", x: 380, y: 200, w: 120, h: 40, type: "rect" },
 ];
+
+const NODES_RU: FlowNode[] = [
+  { id: "start", label: "Старт", x: 160, y: 30, w: 120, h: 40, type: "rect" },
+  { id: "api_call", label: "Вызов API", x: 160, y: 110, w: 120, h: 40, type: "rect" },
+  { id: "check", label: "stop_reason?", x: 160, y: 200, w: 140, h: 50, type: "diamond" },
+  { id: "execute", label: "Запуск инструмента", x: 160, y: 300, w: 120, h: 40, type: "rect" },
+  { id: "append", label: "Добавить результат", x: 160, y: 380, w: 120, h: 40, type: "rect" },
+  { id: "end", label: "Выход / Готово", x: 380, y: 200, w: 120, h: 40, type: "rect" },
+];
+
+const NODES_ZH: FlowNode[] = NODES_EN;
+const NODES_JA: FlowNode[] = NODES_EN;
 
 // Edges between nodes (SVG path data computed inline)
 interface FlowEdge {
@@ -72,7 +85,7 @@ interface MessageBlock {
   colorClass: string;
 }
 
-const MESSAGES_PER_STEP: (MessageBlock | null)[][] = [
+const MESSAGES_PER_STEP_EN: (MessageBlock | null)[][] = [
   [],
   [{ role: "user", detail: "Fix the login bug", colorClass: "bg-blue-500 dark:bg-blue-600" }],
   [],
@@ -85,9 +98,25 @@ const MESSAGES_PER_STEP: (MessageBlock | null)[][] = [
   [{ role: "assistant", detail: "end_turn: Done!", colorClass: "bg-purple-500 dark:bg-purple-600" }],
 ];
 
+const MESSAGES_PER_STEP_RU: (MessageBlock | null)[][] = [
+  [],
+  [{ role: "user", detail: "Почини баг логина", colorClass: "bg-blue-500 dark:bg-blue-600" }],
+  [],
+  [{ role: "assistant", detail: "tool_use: read_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" }],
+  [{ role: "tool_result", detail: "содержимое auth.ts...", colorClass: "bg-emerald-500 dark:bg-emerald-600" }],
+  [
+    { role: "assistant", detail: "tool_use: edit_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" },
+    { role: "tool_result", detail: "файл обновлён", colorClass: "bg-emerald-500 dark:bg-emerald-600" },
+  ],
+  [{ role: "assistant", detail: "end_turn: Готово!", colorClass: "bg-purple-500 dark:bg-purple-600" }],
+];
+
+const MESSAGES_PER_STEP_ZH = MESSAGES_PER_STEP_EN;
+const MESSAGES_PER_STEP_JA = MESSAGES_PER_STEP_EN;
+
 // -- Step annotations --
 
-const STEP_INFO = [
+const STEP_INFO_EN = [
   { title: "The While Loop", desc: "Every agent is a while loop that keeps calling the model until it says 'stop'." },
   { title: "User Input", desc: "The loop starts when the user sends a message." },
   { title: "Call the Model", desc: "Send all messages to the LLM. It sees everything and decides what to do." },
@@ -97,15 +126,28 @@ const STEP_INFO = [
   { title: "stop_reason: end_turn", desc: "The model is done. Loop exits. That's the entire agent." },
 ];
 
+const STEP_INFO_RU = [
+  { title: "Цикл while", desc: "Любой агент — это цикл while, который вызывает модель, пока она не скажет «стоп»." },
+  { title: "Ввод пользователя", desc: "Цикл стартует, когда пользователь отправляет сообщение." },
+  { title: "Вызов модели", desc: "Отправляем все сообщения в LLM. Она видит всё и решает, что делать дальше." },
+  { title: "stop_reason: tool_use", desc: "Модель хочет использовать инструмент. Цикл продолжается." },
+  { title: "Выполнить и дописать", desc: "Запускаем инструмент, добавляем результат в messages[]. Возвращаем модели." },
+  { title: "Снова цикл", desc: "Тот же путь, вторая итерация. Модель решает отредактировать файл." },
+  { title: "stop_reason: end_turn", desc: "Модель закончила. Цикл завершён. Это и есть весь агент." },
+];
+
+const STEP_INFO_ZH = STEP_INFO_EN;
+const STEP_INFO_JA = STEP_INFO_EN;
+
 // -- Helpers --
 
-function getNode(id: string): FlowNode {
-  return NODES.find((n) => n.id === id)!;
+function getNode(nodes: FlowNode[], id: string): FlowNode {
+  return nodes.find((n) => n.id === id)!;
 }
 
-function edgePath(fromId: string, toId: string): string {
-  const from = getNode(fromId);
-  const to = getNode(toId);
+function edgePath(nodes: FlowNode[], fromId: string, toId: string): string {
+  const from = getNode(nodes, fromId);
+  const to = getNode(nodes, toId);
 
   // Loop-back: append -> api_call (goes to the left side and back up)
   if (fromId === "append" && toId === "api_call") {
@@ -147,6 +189,25 @@ export default function AgentLoop({ title }: { title?: string }) {
   } = useSteppedVisualization({ totalSteps: 7, autoPlayInterval: 2500 });
 
   const palette = useSvgPalette();
+  const locale = useLocale();
+  const NODES =
+    locale === "ru" ? NODES_RU : locale === "zh" ? NODES_ZH : locale === "ja" ? NODES_JA : NODES_EN;
+  const MESSAGES_PER_STEP =
+    locale === "ru"
+      ? MESSAGES_PER_STEP_RU
+      : locale === "zh"
+        ? MESSAGES_PER_STEP_ZH
+        : locale === "ja"
+          ? MESSAGES_PER_STEP_JA
+          : MESSAGES_PER_STEP_EN;
+  const STEP_INFO =
+    locale === "ru"
+      ? STEP_INFO_RU
+      : locale === "zh"
+        ? STEP_INFO_ZH
+        : locale === "ja"
+          ? STEP_INFO_JA
+          : STEP_INFO_EN;
   const activeNodes = ACTIVE_NODES_PER_STEP[currentStep];
   const activeEdges = ACTIVE_EDGES_PER_STEP[currentStep];
 
@@ -211,7 +272,7 @@ export default function AgentLoop({ title }: { title?: string }) {
               {EDGES.map((edge) => {
                 const key = `${edge.from}->${edge.to}`;
                 const isActive = activeEdges.includes(key);
-                const d = edgePath(edge.from, edge.to);
+                const d = edgePath(NODES, edge.from, edge.to);
 
                 return (
                   <g key={key}>
@@ -232,13 +293,13 @@ export default function AgentLoop({ title }: { title?: string }) {
                       <text
                         x={
                           edge.from === "check" && edge.to === "end"
-                            ? (getNode("check").x + getNode("end").x) / 2
-                            : getNode(edge.from).x + 75
+                            ? (getNode(NODES, "check").x + getNode(NODES, "end").x) / 2
+                            : getNode(NODES, edge.from).x + 75
                         }
                         y={
                           edge.from === "check" && edge.to === "end"
-                            ? getNode("check").y - 10
-                            : (getNode(edge.from).y + getNode(edge.to).y) / 2
+                            ? getNode(NODES, "check").y - 10
+                            : (getNode(NODES, edge.from).y + getNode(NODES, edge.to).y) / 2
                         }
                         textAnchor="middle"
                         className="fill-zinc-400 text-[10px] dark:fill-zinc-500"

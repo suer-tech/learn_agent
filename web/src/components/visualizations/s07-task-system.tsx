@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useSteppedVisualization } from "@/hooks/useSteppedVisualization";
 import { StepControls } from "@/components/visualizations/shared/step-controls";
 import { useDarkMode, useSvgPalette } from "@/hooks/useDarkMode";
+import { useLocale } from "@/lib/i18n";
 
 type TaskStatus = "pending" | "in_progress" | "completed" | "blocked";
 
@@ -21,7 +22,7 @@ interface StepInfo {
   description: string;
 }
 
-const TASKS: TaskNode[] = [
+const TASKS_EN: TaskNode[] = [
   { id: "T1", label: "T1: Setup DB", x: 80, y: 160, deps: [] },
   { id: "T2", label: "T2: API routes", x: 280, y: 80, deps: ["T1"] },
   { id: "T3", label: "T3: Auth module", x: 280, y: 240, deps: ["T1"] },
@@ -29,10 +30,21 @@ const TASKS: TaskNode[] = [
   { id: "T5", label: "T5: Deploy", x: 650, y: 160, deps: ["T4"] },
 ];
 
+const TASKS_RU: TaskNode[] = [
+  { id: "T1", label: "T1: Поднять БД", x: 80, y: 160, deps: [] },
+  { id: "T2", label: "T2: API-роуты", x: 280, y: 80, deps: ["T1"] },
+  { id: "T3", label: "T3: Модуль auth", x: 280, y: 240, deps: ["T1"] },
+  { id: "T4", label: "T4: Интеграция", x: 480, y: 160, deps: ["T2", "T3"] },
+  { id: "T5", label: "T5: Деплой", x: 650, y: 160, deps: ["T4"] },
+];
+
+const TASKS_ZH = TASKS_EN;
+const TASKS_JA = TASKS_EN;
+
 const NODE_W = 140;
 const NODE_H = 50;
 
-const STEP_INFO: StepInfo[] = [
+const STEP_INFO_EN: StepInfo[] = [
   {
     title: "File-Based Tasks",
     description:
@@ -67,6 +79,45 @@ const STEP_INFO: StepInfo[] = [
       "The entire dependency graph is resolved. File-based persistence means this works across context compressions.",
   },
 ];
+
+const STEP_INFO_RU: StepInfo[] = [
+  {
+    title: "Задачи в файлах",
+    description:
+      "Задачи лежат в JSON-файлах на диске. Они переживают сжатие контекста — в отличие от in-memory state.",
+  },
+  {
+    title: "Старт T1",
+    description:
+      "Задачи без зависимостей можно начать сразу. У T1 нет блокеров.",
+  },
+  {
+    title: "T1 готова",
+    description: "Завершение T1 разблокирует её потомков: T2 и T3.",
+  },
+  {
+    title: "Параллельная работа",
+    description:
+      "T2 и T3 не зависят друг от друга. Они могут идти одновременно.",
+  },
+  {
+    title: "Частичная разблокировка",
+    description:
+      "T4 зависит И от T2, И от T3. Она ждёт, пока завершатся все блокеры.",
+  },
+  {
+    title: "Полностью разблокировано",
+    description: "Все блокеры сняты. T4 может стартовать.",
+  },
+  {
+    title: "Граф пройден",
+    description:
+      "Весь граф зависимостей пройден. Хранение в файле позволяет переживать сжатие контекста.",
+  },
+];
+
+const STEP_INFO_ZH = STEP_INFO_EN;
+const STEP_INFO_JA = STEP_INFO_EN;
 
 function getTaskStatus(taskId: string, step: number): TaskStatus {
   const statusMap: Record<string, TaskStatus[]> = {
@@ -205,6 +256,39 @@ export default function TaskSystem({ title }: { title?: string }) {
 
   const isDark = useDarkMode();
   const palette = useSvgPalette();
+  const locale = useLocale();
+  const TASKS =
+    locale === "ru" ? TASKS_RU : locale === "zh" ? TASKS_ZH : locale === "ja" ? TASKS_JA : TASKS_EN;
+  const STEP_INFO =
+    locale === "ru"
+      ? STEP_INFO_RU
+      : locale === "zh"
+        ? STEP_INFO_ZH
+        : locale === "ja"
+          ? STEP_INFO_JA
+          : STEP_INFO_EN;
+  const inlineLabels =
+    locale === "ru"
+      ? {
+          blockedT3: "Заблокирована: ждёт T3",
+          persistedNote: "Сохранено на диск — переживает сжатие контекста",
+          legend: {
+            pending: "pending",
+            in_progress: "in_progress",
+            completed: "completed",
+            blocked: "blocked",
+          } as Record<TaskStatus, string>,
+        }
+      : {
+          blockedT3: "Blocked: waiting on T3",
+          persistedNote: "Persisted to disk -- survives context compaction",
+          legend: {
+            pending: "pending",
+            in_progress: "in_progress",
+            completed: "completed",
+            blocked: "blocked",
+          } as Record<TaskStatus, string>,
+        };
 
   const edges = useMemo(() => {
     const result: {
@@ -230,7 +314,7 @@ export default function TaskSystem({ title }: { title?: string }) {
       }
     }
     return result;
-  }, []);
+  }, [TASKS]);
 
   const stepInfo = STEP_INFO[currentStep];
 
@@ -413,7 +497,7 @@ export default function TaskSystem({ title }: { title?: string }) {
                 fontFamily="monospace"
                 fill={isDark ? "#f87171" : "#dc2626"}
               >
-                Blocked: waiting on T3
+                {inlineLabels.blockedT3}
               </text>
             </motion.g>
           )}
@@ -439,7 +523,7 @@ export default function TaskSystem({ title }: { title?: string }) {
               .tasks/tasks.json
             </span>
             <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
-              Persisted to disk -- survives context compaction
+              {inlineLabels.persistedNote}
             </span>
           </div>
           <motion.div

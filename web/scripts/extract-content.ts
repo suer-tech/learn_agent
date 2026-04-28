@@ -103,10 +103,8 @@ function countLoc(lines: string[]): number {
 // docs/en/s01-the-agent-loop.md -> "en"
 // docs/zh/s01-the-agent-loop.md -> "zh"
 // docs/ja/s01-the-agent-loop.md -> "ja"
-function detectLocale(relPath: string): "en" | "zh" | "ja" {
-  if (relPath.startsWith("zh/") || relPath.startsWith("zh\\")) return "zh";
-  if (relPath.startsWith("ja/") || relPath.startsWith("ja\\")) return "ja";
-  return "en";
+function detectLocale(_relPath: string): "ru" {
+  return "ru";
 }
 
 // Extract version from doc filename (e.g., "s01-the-agent-loop.md" -> "s01")
@@ -219,7 +217,7 @@ function main() {
   const docs: DocContent[] = [];
 
   if (fs.existsSync(DOCS_DIR)) {
-    const localeDirs = ["en", "zh", "ja"];
+    const localeDirs = ["ru"];
     let totalDocFiles = 0;
 
     for (const locale of localeDirs) {
@@ -245,7 +243,7 @@ function main() {
         const titleMatch = content.match(/^#\s+(.+)$/m);
         const title = titleMatch ? titleMatch[1] : filename;
 
-        docs.push({ version, locale: locale as "en" | "zh" | "ja", title, content });
+        docs.push({ version, locale: "ru", title, content });
       }
     }
 

@@ -4,18 +4,19 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { LAYERS } from "@/lib/constants";
 import versionsData from "@/data/generated/versions.json";
+import { useTranslations } from "@/lib/i18n";
 
 const CLASS_DESCRIPTIONS: Record<string, string> = {
-  TodoManager: "Visible task planning with constraints",
-  SkillLoader: "Dynamic knowledge injection from SKILL.md files",
-  ContextManager: "Three-layer context compression pipeline",
-  Task: "File-based persistent task with dependencies",
-  TaskManager: "File-based persistent task CRUD with dependencies",
-  BackgroundTask: "Single background execution unit",
-  BackgroundManager: "Non-blocking thread execution + notification queue",
-  TeammateManager: "Multi-agent team lifecycle and coordination",
-  Teammate: "Individual agent identity and state tracking",
-  SharedBoard: "Cross-agent shared state coordination",
+  TodoManager: "Видимое планирование задач с ограничениями",
+  SkillLoader: "Динамическая инъекция знаний из файлов SKILL.md",
+  ContextManager: "Трёхуровневый конвейер сжатия контекста",
+  Task: "Постоянная задача в файле с зависимостями",
+  TaskManager: "CRUD постоянных задач в файле + зависимости",
+  BackgroundTask: "Единица фонового исполнения",
+  BackgroundManager: "Неблокирующее выполнение в потоках + очередь уведомлений",
+  TeammateManager: "Жизненный цикл и координация команды agents",
+  Teammate: "Идентичность отдельного agent'а и отслеживание состояния",
+  SharedBoard: "Общая координация состояния между agents",
 };
 
 interface ArchDiagramProps {
@@ -107,6 +108,8 @@ export function ArchDiagram({ version }: ArchDiagramProps) {
   const newClassNames = getNewClassNames(version);
   const versionData = versionsData.versions.find((v) => v.id === version);
   const tools = versionData?.tools ?? [];
+  const tUi = useTranslations("ui");
+  const descriptions = CLASS_DESCRIPTIONS;
 
   const reversed = [...allClasses].reverse();
 
@@ -181,7 +184,7 @@ export function ArchDiagram({ version }: ArchDiagramProps) {
                       : "text-zinc-400 dark:text-zinc-500"
                   )}
                 >
-                  {CLASS_DESCRIPTIONS[cls.name] || ""}
+                  {descriptions[cls.name] || ""}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -202,7 +205,7 @@ export function ArchDiagram({ version }: ArchDiagramProps) {
 
       {allClasses.length === 0 && (
         <div className="rounded-lg border border-dashed border-zinc-300 px-4 py-6 text-center text-sm text-zinc-400 dark:border-zinc-600">
-          No classes in this version (functions only)
+          {tUi("no_classes")}
         </div>
       )}
 
