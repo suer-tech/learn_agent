@@ -183,8 +183,8 @@ export default function SubagentIsolation({ title }: { title?: string }) {
   const inlineLabels =
     locale === "ru"
       ? {
-          parentProcess: "Родительский процесс",
-          childProcess: "Дочерний процесс",
+          parentProcess: "Основной процесс",
+          childProcess: "Процесс субагента",
           freshMessages: "messages[] (свежий)",
           isolation: "ИЗОЛЯЦИЯ",
           notSpawned: "пока не запущен",
