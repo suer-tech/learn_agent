@@ -87,26 +87,26 @@ interface MessageBlock {
 
 const MESSAGES_PER_STEP_EN: (MessageBlock | null)[][] = [
   [],
-  [{ role: "user", detail: "Fix the login bug", colorClass: "bg-blue-500 dark:bg-blue-600" }],
+  [{ role: "user", detail: "Distribute files from shared folder to different folders", colorClass: "bg-blue-500 dark:bg-blue-600" }],
   [],
-  [{ role: "assistant", detail: "tool_use: read_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" }],
-  [{ role: "tool_result", detail: "auth.ts contents...", colorClass: "bg-emerald-500 dark:bg-emerald-600" }],
+  [{ role: "assistant", detail: "tool_use: list_dir", colorClass: "bg-zinc-600 dark:bg-zinc-500" }],
+  [{ role: "tool_result", detail: "list of files...", colorClass: "bg-emerald-500 dark:bg-emerald-600" }],
   [
-    { role: "assistant", detail: "tool_use: edit_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" },
-    { role: "tool_result", detail: "file updated", colorClass: "bg-emerald-500 dark:bg-emerald-600" },
+    { role: "assistant", detail: "tool_use: move_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" },
+    { role: "tool_result", detail: "files moved", colorClass: "bg-emerald-500 dark:bg-emerald-600" },
   ],
   [{ role: "assistant", detail: "end_turn: Done!", colorClass: "bg-purple-500 dark:bg-purple-600" }],
 ];
 
 const MESSAGES_PER_STEP_RU: (MessageBlock | null)[][] = [
   [],
-  [{ role: "user", detail: "Почини баг логина", colorClass: "bg-blue-500 dark:bg-blue-600" }],
+  [{ role: "user", detail: "Распредели файлы из общей папки по разным папкам", colorClass: "bg-blue-500 dark:bg-blue-600" }],
   [],
-  [{ role: "assistant", detail: "tool_use: read_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" }],
-  [{ role: "tool_result", detail: "содержимое auth.ts...", colorClass: "bg-emerald-500 dark:bg-emerald-600" }],
+  [{ role: "assistant", detail: "tool_use: list_dir", colorClass: "bg-zinc-600 dark:bg-zinc-500" }],
+  [{ role: "tool_result", detail: "список файлов...", colorClass: "bg-emerald-500 dark:bg-emerald-600" }],
   [
-    { role: "assistant", detail: "tool_use: edit_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" },
-    { role: "tool_result", detail: "файл обновлён", colorClass: "bg-emerald-500 dark:bg-emerald-600" },
+    { role: "assistant", detail: "tool_use: move_file", colorClass: "bg-zinc-600 dark:bg-zinc-500" },
+    { role: "tool_result", detail: "файлы перемещены", colorClass: "bg-emerald-500 dark:bg-emerald-600" },
   ],
   [{ role: "assistant", detail: "end_turn: Готово!", colorClass: "bg-purple-500 dark:bg-purple-600" }],
 ];
@@ -122,7 +122,7 @@ const STEP_INFO_EN = [
   { title: "Call the Model", desc: "Send all messages to the LLM. It sees everything and decides what to do." },
   { title: "stop_reason: tool_use", desc: "The model wants to use a tool. The loop continues." },
   { title: "Execute & Append", desc: "Run the tool, append the result to messages[]. Feed it back." },
-  { title: "Loop Again", desc: "Same code path, second iteration. The model decides to edit a file." },
+  { title: "Loop Again", desc: "Same code path, second iteration. The model decides to move files." },
   { title: "stop_reason: end_turn", desc: "The model is done. Loop exits. That's the entire agent." },
 ];
 
@@ -132,7 +132,7 @@ const STEP_INFO_RU = [
   { title: "Вызов модели", desc: "Отправляем все сообщения в LLM. Она видит всё и решает, что делать дальше." },
   { title: "stop_reason: tool_use", desc: "Модель хочет использовать инструмент. Цикл продолжается." },
   { title: "Выполнить и дописать", desc: "Запускаем инструмент, добавляем результат в messages[]. Возвращаем модели." },
-  { title: "Снова цикл", desc: "Тот же путь, вторая итерация. Модель решает отредактировать файл." },
+  { title: "Снова цикл", desc: "Тот же путь, вторая итерация. Модель решает переместить файлы." },
   { title: "stop_reason: end_turn", desc: "Модель закончила. Цикл завершён. Это и есть весь агент." },
 ];
 
