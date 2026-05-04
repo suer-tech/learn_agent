@@ -45,6 +45,24 @@ export default async function VersionPage({
       ? LEARNING_PATH[pathIndex + 1]
       : null;
 
+  if (version !== "s01") {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center py-20 text-center px-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white/50 p-8 shadow-sm backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/50 max-w-md">
+          <div className="mb-4 text-4xl">⏳</div>
+          <h1 className="text-xl font-bold sm:text-2xl mb-2">Урок появится после загрузки видео!</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mb-6">Пожалуйста ожидайте!</p>
+          <Link
+            href={`/${locale}`}
+            className="inline-flex h-10 items-center justify-center rounded-md bg-zinc-900 px-6 text-sm font-medium text-zinc-50 transition-colors hover:bg-zinc-900/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/90"
+          >
+            {locale === "ru" ? "На главную" : "Back to home"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-10 py-4">
       {/* Header */}
