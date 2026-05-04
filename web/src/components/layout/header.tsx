@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { key: "timeline", href: "/timeline" },
   { key: "compare", href: "/compare" },
   { key: "layers", href: "/layers" },
+  { key: "consulting", href: "/consulting" },
 ] as const;
 
 export function Header() {
