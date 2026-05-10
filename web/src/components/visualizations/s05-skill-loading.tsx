@@ -14,94 +14,94 @@ interface SkillEntry {
 
 const SKILLS_EN: SkillEntry[] = [
   {
-    name: "/commit",
-    summary: "Create git commits following repo conventions",
+    name: "/read-invoice",
+    summary: "Extract billing data from invoice PDF",
     fullTokens: 320,
     content: [
-      "1. Run git status + git diff to see changes",
-      "2. Analyze all staged changes and draft message",
-      "3. Create commit with Co-Authored-By trailer",
-      "4. Run git status after commit to verify",
+      "1. Load PDF parser or OCR for layout",
+      "2. Locate 'Total Due', 'Date', and 'Vendor VAT'",
+      "3. Parse tabular items into structured JSON",
+      "4. Validate total amounts sum correctly",
     ],
   },
   {
-    name: "/review-pr",
-    summary: "Review pull requests for bugs and style",
+    name: "/read-contract",
+    summary: "Extract terms from legal agreements",
     fullTokens: 480,
     content: [
-      "1. Fetch PR diff via gh pr view",
-      "2. Analyze changes file by file for issues",
-      "3. Check for bugs, security, and style problems",
-      "4. Post review comments with gh pr review",
+      "1. Scan for Effective Date and Termination",
+      "2. Identify both signing parties entities",
+      "3. Extract Governing Law clause",
+      "4. Summarize liability limit paragraph",
     ],
   },
   {
-    name: "/test",
-    summary: "Run and analyze test suites",
+    name: "/read-passport",
+    summary: "Extract citizen details from passport scan",
     fullTokens: 290,
     content: [
-      "1. Detect test framework from package.json",
-      "2. Run test suite and capture output",
-      "3. Analyze failures and suggest fixes",
-      "4. Re-run after applying fixes",
+      "1. Apply specialized OCR layer for ID fonts",
+      "2. Extract Surname, Given Names, DOB",
+      "3. Read Document Number and Expiry Date",
+      "4. Validate machine-readable zone (MRZ)",
     ],
   },
   {
-    name: "/deploy",
-    summary: "Deploy application to target environment",
+    name: "/read-resume",
+    summary: "Extract experience and skills from CV",
     fullTokens: 350,
     content: [
-      "1. Verify all tests pass before deploy",
-      "2. Build production bundle",
-      "3. Push to deployment target via CI",
-      "4. Verify health check on deployed URL",
+      "1. Segment text into Work and Education",
+      "2. Normalize dates of employment",
+      "3. Extract technical skills list",
+      "4. Convert parsed profile to standard schema",
     ],
   },
 ];
 
 const SKILLS_RU: SkillEntry[] = [
   {
-    name: "/commit",
-    summary: "Создать git-коммит по соглашениям репозитория",
+    name: "/read-invoice",
+    summary: "Извлечь платежные данные из PDF счета",
     fullTokens: 320,
     content: [
-      "1. Запустить git status + git diff, чтобы увидеть изменения",
-      "2. Проанализировать стейджинг и составить сообщение",
-      "3. Создать коммит с трейлером Co-Authored-By",
-      "4. После коммита запустить git status для проверки",
+      "1. Загрузить PDF парсер или OCR для разметки",
+      "2. Найти поля 'К оплате', 'Дата' и 'ИНН продавца'",
+      "3. Преобразовать табличные данные в структуру JSON",
+      "4. Сверить итоговые суммы с перечнем позиций",
     ],
   },
   {
-    name: "/review-pr",
-    summary: "Ревью pull request на баги и стиль",
+    name: "/read-contract",
+    summary: "Извлечь условия юридического договора",
     fullTokens: 480,
     content: [
-      "1. Получить diff PR через gh pr view",
-      "2. Разобрать изменения по файлам в поисках проблем",
-      "3. Проверить баги, безопасность и стилистику",
-      "4. Опубликовать комментарии через gh pr review",
+      "1. Просканировать на дату вступления и расторжения",
+      "2. Определить наименования обеих сторон договора",
+      "3. Найти пункт о применимом праве и подсудности",
+      "4. Резюмировать параграф об ответственности",
     ],
   },
   {
-    name: "/test",
-    summary: "Запустить и проанализировать тесты",
+    name: "/read-passport",
+    summary: "Извлечь данные из скана паспорта",
     fullTokens: 290,
     content: [
-      "1. Определить тест-фреймворк по package.json",
-      "2. Запустить тесты и собрать вывод",
-      "3. Разобрать падения и предложить фиксы",
-      "4. Перезапустить тесты после правок",
+      "1. Применить слой OCR для шрифтов удостоверений",
+      "2. Извлечь фамилию, имя и дату рождения",
+      "3. Считать номер документа и срок действия",
+      "4. Проверить машиночитаемую зону (MRZ)",
     ],
   },
   {
-    name: "/deploy",
-    summary: "Деплой приложения в целевое окружение",
+    name: "/read-resume",
+    summary: "Извлечь опыт работы и навыки из резюме",
     fullTokens: 350,
     content: [
-      "1. Убедиться, что все тесты проходят",
-      "2. Собрать продакшн-бандл",
-      "3. Отправить в целевой деплой через CI",
-      "4. Проверить healthcheck по адресу деплоя",
+      "1. Разбить текст на работу и образование",
+      "2. Нормализовать даты трудоустройства",
+      "3. Извлечь перечень технических навыков",
+      "4. Привести профиль к единой схеме данных",
     ],
   },
 ];
@@ -303,7 +303,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                     {inlineLabels.userTypes}
                   </span>
                   <code className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
-                    /commit
+                    /read-invoice
                   </code>
                 </motion.div>
               )}
@@ -318,7 +318,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                     {inlineLabels.userTypes}
                   </span>
                   <code className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
-                    /review-pr
+                    /read-contract
                   </code>
                 </motion.div>
               )}
@@ -360,7 +360,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-blue-500" />
                           <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
-                            SKILL.md: /commit
+                            SKILL.md: /read-invoice
                           </span>
                         </div>
                         <span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-[10px] text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
@@ -402,7 +402,7 @@ export default function SkillLoading({ title }: { title?: string }) {
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-purple-500" />
                           <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
-                            SKILL.md: /review-pr
+                            SKILL.md: /read-contract
                           </span>
                         </div>
                         <span className="rounded bg-purple-100 px-1.5 py-0.5 font-mono text-[10px] text-purple-600 dark:bg-purple-900/40 dark:text-purple-300">
