@@ -93,6 +93,7 @@ export default async function VersionPage({
 
       {/* Client-rendered interactive sections */}
       <VersionDetailClient
+        locale={locale}
         version={version}
         diff={diff}
         source={versionData.source}

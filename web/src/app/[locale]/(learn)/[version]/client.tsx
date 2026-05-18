@@ -12,6 +12,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { useTranslations } from "@/lib/i18n";
 
 interface VersionDetailClientProps {
+  locale: string;
   version: string;
   diff: {
     from: string;
@@ -25,7 +26,23 @@ interface VersionDetailClientProps {
   filename: string;
 }
 
+const YOUTUBE_VIDEOS: Record<string, { id: string; url: string }> = {
+  s01: {
+    id: "aUuV9ZVHNj0",
+    url: "https://youtu.be/aUuV9ZVHNj0?si=I7kOnS8OwInLfCeC",
+  },
+  s02: {
+    id: "j_KHRzzsrJ0",
+    url: "https://youtu.be/j_KHRzzsrJ0?si=5iz46pGhu3Ad3FGU",
+  },
+  s03: {
+    id: "JatJwREEAUI",
+    url: "https://youtu.be/JatJwREEAUI",
+  },
+};
+
 export function VersionDetailClient({
+  locale,
   version,
   diff,
   source,
@@ -40,8 +57,26 @@ export function VersionDetailClient({
     { id: "deep-dive", label: t("tab_deep_dive") },
   ];
 
+  const videoData = YOUTUBE_VIDEOS[version];
+
   return (
     <div className="space-y-6">
+      {/* YouTube Video Block */}
+      {videoData && (
+        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-black dark:border-zinc-800 shadow-md aspect-video">
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${videoData.id}`}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            className="h-full w-full"
+          />
+        </div>
+      )}
+
       {/* Hero Visualization */}
       <SessionVisualization version={version} />
 
