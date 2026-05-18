@@ -45,7 +45,7 @@ export default async function VersionPage({
       ? LEARNING_PATH[pathIndex + 1]
       : null;
 
-  if (version !== "s01" && version !== "s02") {
+  if (version !== "s01" && version !== "s02" && version !== "s03") {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center py-20 text-center px-4">
         <div className="rounded-2xl border border-zinc-200 bg-white/50 p-8 shadow-sm backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/50 max-w-md">
