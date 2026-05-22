@@ -36,8 +36,9 @@ export interface PracticeProgressFile {
 }
 
 export type PracticeBlockType =
-  | "systemPrompt"
+  | "dataInput"
   | "llm"
+  | "subAgent"
   | "tools"
   | "skills"
   | "memory"

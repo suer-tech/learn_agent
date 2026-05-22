@@ -3,16 +3,17 @@
     {
       "id": "agent-loop-basic",
       "title": "Базовый агентный цикл",
-      "description": "Соберите агента, который вызывает LLM, проверяет наличие вызовов функций через роутер (Condition). Если есть вызовы — отправляет их в Tools и возвращает результат в LLM (цикл). Если нет — выдает Output.",
+      "description": "Соберите агента, который получает данные (Data Input), вызывает LLM, проверяет наличие вызовов функций через роутер (Condition). Если есть вызовы — отправляет их в Tools и возвращает результат в LLM (цикл). Если нет — выдает Output.",
       "blocks": [
-        "systemPrompt",
+        "dataInput",
         "llm",
+        "subAgent",
         "condition",
         "tools",
         "output"
       ],
       "requiredEdges": [
-        ["systemPrompt", "llm"],
+        ["dataInput", "llm"],
         ["llm", "condition"],
         ["condition", "tools"],
         ["tools", "llm"],
@@ -21,7 +22,7 @@
       "forbiddenEdges": [
         ["llm", "tools"],
         ["tools", "output"],
-        ["systemPrompt", "output"],
+        ["dataInput", "output"],
         ["llm", "output"]
       ],
       "expectedOutput": "agent_loop_solved",
@@ -32,14 +33,15 @@
       "title": "Выбор навыка через роутер",
       "description": "Соберите схему, где агент читает задачу (LLM), выбирает нужный skill через условный блок (Condition) и после выполнения навыка возвращается в цикл.",
       "blocks": [
-        "systemPrompt",
+        "dataInput",
         "llm",
+        "subAgent",
         "condition",
         "skills",
         "output"
       ],
       "requiredEdges": [
-        ["systemPrompt", "llm"],
+        ["dataInput", "llm"],
         ["llm", "condition"],
         ["condition", "skills"],
         ["skills", "llm"],
@@ -55,17 +57,18 @@
     {
       "id": "memory-dispatcher",
       "title": "Память и песочница",
-      "description": "Соберите агента, который хранит контекст в памяти, решает через Condition, вызывать ли песочницу (Dispatcher). После Dispatcher результат пишется в Memory и идет обратно в LLM.",
+      "description": "Соберите агента, который получает письмо, восстанавливает историю (Memory), принимает решение (LLM), и если нужно — использует инструменты (Dispatcher). Результат пишется обратно в память.",
       "blocks": [
-        "systemPrompt",
+        "dataInput",
         "memory",
         "llm",
+        "subAgent",
         "condition",
         "dispatcher",
         "output"
       ],
       "requiredEdges": [
-        ["systemPrompt", "llm"],
+        ["dataInput", "memory"],
         ["memory", "llm"],
         ["llm", "condition"],
         ["condition", "dispatcher"],
@@ -75,7 +78,8 @@
       "forbiddenEdges": [
         ["llm", "output"],
         ["dispatcher", "output"],
-        ["memory", "output"]
+        ["memory", "output"],
+        ["dataInput", "llm"]
       ],
       "expectedOutput": "memory_dispatcher_solved",
       "score": 100
