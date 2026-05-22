@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { key: "timeline", href: "/timeline" },
   { key: "compare", href: "/compare" },
   { key: "layers", href: "/layers" },
+  // { key: "practice", href: "/practice", label: "Практика" },
   { key: "consulting", href: "/consulting" },
 ] as const;
 
@@ -54,7 +55,7 @@ export function Header() {
                   : "text-zinc-500 dark:text-zinc-400"
               )}
             >
-              {t(item.key)}
+              {"label" in item ? item.label : t(item.key)}
             </Link>
           ))}
 
@@ -94,7 +95,7 @@ export function Header() {
               className="flex min-h-[44px] items-center text-sm"
               onClick={() => setMobileOpen(false)}
             >
-              {t(item.key)}
+              {"label" in item ? item.label : t(item.key)}
             </Link>
           ))}
           <div className="mt-3 flex items-center justify-end border-t border-[var(--color-border)] pt-3">

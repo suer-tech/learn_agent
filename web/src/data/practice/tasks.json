@@ -1,0 +1,84 @@
+{
+  "tasks": [
+    {
+      "id": "agent-loop-basic",
+      "title": "Базовый агентный цикл",
+      "description": "Соберите агента, который вызывает LLM, проверяет наличие вызовов функций через роутер (Condition). Если есть вызовы — отправляет их в Tools и возвращает результат в LLM (цикл). Если нет — выдает Output.",
+      "blocks": [
+        "systemPrompt",
+        "llm",
+        "condition",
+        "tools",
+        "output"
+      ],
+      "requiredEdges": [
+        ["systemPrompt", "llm"],
+        ["llm", "condition"],
+        ["condition", "tools"],
+        ["tools", "llm"],
+        ["condition", "output"]
+      ],
+      "forbiddenEdges": [
+        ["llm", "tools"],
+        ["tools", "output"],
+        ["systemPrompt", "output"],
+        ["llm", "output"]
+      ],
+      "expectedOutput": "agent_loop_solved",
+      "score": 100
+    },
+    {
+      "id": "skill-router",
+      "title": "Выбор навыка через роутер",
+      "description": "Соберите схему, где агент читает задачу (LLM), выбирает нужный skill через условный блок (Condition) и после выполнения навыка возвращается в цикл.",
+      "blocks": [
+        "systemPrompt",
+        "llm",
+        "condition",
+        "skills",
+        "output"
+      ],
+      "requiredEdges": [
+        ["systemPrompt", "llm"],
+        ["llm", "condition"],
+        ["condition", "skills"],
+        ["skills", "llm"],
+        ["condition", "output"]
+      ],
+      "forbiddenEdges": [
+        ["llm", "output"],
+        ["skills", "output"]
+      ],
+      "expectedOutput": "skill_router_solved",
+      "score": 100
+    },
+    {
+      "id": "memory-dispatcher",
+      "title": "Память и песочница",
+      "description": "Соберите агента, который хранит контекст в памяти, решает через Condition, вызывать ли песочницу (Dispatcher). После Dispatcher результат пишется в Memory и идет обратно в LLM.",
+      "blocks": [
+        "systemPrompt",
+        "memory",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [
+        ["systemPrompt", "llm"],
+        ["memory", "llm"],
+        ["llm", "condition"],
+        ["condition", "dispatcher"],
+        ["dispatcher", "memory"],
+        ["condition", "output"]
+      ],
+      "forbiddenEdges": [
+        ["llm", "output"],
+        ["dispatcher", "output"],
+        ["memory", "output"]
+      ],
+      "expectedOutput": "memory_dispatcher_solved",
+      "score": 100
+    }
+  ]
+}
