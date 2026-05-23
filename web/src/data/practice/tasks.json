@@ -3,25 +3,31 @@
     {
       "id": "agent-loop-basic",
       "title": "Базовый агентный цикл",
-      "description": "Соберите агента, который получает данные (Data Input), вызывает LLM, проверяет наличие вызовов функций через роутер (Condition). Если есть вызовы — отправляет их в Tools и возвращает результат в LLM (цикл). Если нет — выдает Output.",
+      "description": "Соберите замкнутый цикл агента: Data Input -> Message History -> LLM -> Разделитель (Condition). Если нужны действия — отправляем в Tool Read, а затем обратно в Message History. Если нет — в Output.",
       "blocks": [
         "dataInput",
+        "messageHistory",
+        "systemPrompt",
         "llm",
-        "subAgent",
+        "toolRead",
+        "toolWrite",
+        "toolCreate",
+        "toolDelete",
         "condition",
-        "tools",
+        "dispatcher",
         "output"
       ],
       "requiredEdges": [
-        ["dataInput", "llm"],
+        ["dataInput", "messageHistory"],
+        ["messageHistory", "llm"],
         ["llm", "condition"],
-        ["condition", "tools"],
-        ["tools", "llm"],
+        ["condition", "toolRead"],
+        ["toolRead", "messageHistory"],
         ["condition", "output"]
       ],
       "forbiddenEdges": [
-        ["llm", "tools"],
-        ["tools", "output"],
+        ["llm", "toolRead"],
+        ["toolRead", "output"],
         ["dataInput", "output"],
         ["llm", "output"]
       ],
@@ -30,55 +36,70 @@
     },
     {
       "id": "skill-router",
-      "title": "Выбор навыка через роутер",
-      "description": "Соберите схему, где агент читает задачу (LLM), выбирает нужный skill через условный блок (Condition) и после выполнения навыка возвращается в цикл.",
+      "title": "Использование системного промпта",
+      "description": "Соберите схему, где агент сначала получает данные (Data), затем системный промпт подключается к LLM. LLM обращается к Message History и при необходимости использует Dispatcher (Песочницу).",
       "blocks": [
         "dataInput",
+        "messageHistory",
+        "systemPrompt",
         "llm",
-        "subAgent",
+        "toolRead",
+        "toolWrite",
+        "toolCreate",
+        "toolDelete",
         "condition",
-        "skills",
+        "dispatcher",
         "output"
       ],
       "requiredEdges": [
-        ["dataInput", "llm"],
+        ["dataInput", "messageHistory"],
+        ["systemPrompt", "llm"],
+        ["messageHistory", "llm"],
         ["llm", "condition"],
-        ["condition", "skills"],
-        ["skills", "llm"],
+        ["condition", "dispatcher"],
+        ["dispatcher", "messageHistory"],
         ["condition", "output"]
       ],
       "forbiddenEdges": [
         ["llm", "output"],
-        ["skills", "output"]
+        ["dispatcher", "output"]
       ],
       "expectedOutput": "skill_router_solved",
       "score": 100
     },
     {
       "id": "memory-dispatcher",
-      "title": "Память и песочница",
-      "description": "Соберите агента, который получает письмо, восстанавливает историю (Memory), принимает решение (LLM), и если нужно — использует инструменты (Dispatcher). Результат пишется обратно в память.",
+      "title": "Полный цикл агента",
+      "description": "Соберите агента, который читает задачу (Tool Read), передаёт данные в System Prompt, затем идёт в LLM через Message History, выбирает нужный тул (Tool Write или Tool Delete) через роутер (Condition), и возвращается в цикл.",
       "blocks": [
         "dataInput",
-        "memory",
+        "messageHistory",
+        "systemPrompt",
         "llm",
-        "subAgent",
+        "toolRead",
+        "toolWrite",
+        "toolCreate",
+        "toolDelete",
         "condition",
         "dispatcher",
         "output"
       ],
       "requiredEdges": [
-        ["dataInput", "memory"],
-        ["memory", "llm"],
+        ["dataInput", "toolRead"],
+        ["toolRead", "systemPrompt"],
+        ["systemPrompt", "llm"],
+        ["messageHistory", "llm"],
         ["llm", "condition"],
-        ["condition", "dispatcher"],
-        ["dispatcher", "memory"],
+        ["condition", "toolWrite"],
+        ["condition", "toolDelete"],
+        ["toolWrite", "messageHistory"],
+        ["toolDelete", "messageHistory"],
         ["condition", "output"]
       ],
       "forbiddenEdges": [
         ["llm", "output"],
-        ["dispatcher", "output"],
-        ["memory", "output"],
+        ["toolWrite", "output"],
+        ["toolDelete", "output"],
         ["dataInput", "llm"]
       ],
       "expectedOutput": "memory_dispatcher_solved",

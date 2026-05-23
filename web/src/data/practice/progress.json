@@ -3,10 +3,10 @@
     {
       "username": "demo_student",
       "taskId": "agent-loop-basic",
-      "status": "passed",
-      "score": 100,
-      "lastResult": "agent_loop_solved",
-      "updatedAt": "2026-05-22T12:54:46.089Z"
+      "status": "failed",
+      "score": 0,
+      "lastResult": "graph_validation_failed",
+      "updatedAt": "2026-05-23T13:51:45.913Z"
     }
   ]
 }

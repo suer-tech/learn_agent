@@ -38,13 +38,16 @@ export interface PracticeProgressFile {
 export type PracticeBlockType =
   | "dataInput"
   | "llm"
-  | "subAgent"
-  | "tools"
-  | "skills"
-  | "memory"
-  | "condition"
+  | "messageHistory"
+  | "toolRead"
+  | "toolWrite"
+  | "toolCreate"
+  | "toolDelete"
   | "dispatcher"
-  | "output";
+  | "systemPrompt"
+  | "subagent"
+  | "output"
+  | "condition";
 
 export interface PracticeTask {
   id: string;

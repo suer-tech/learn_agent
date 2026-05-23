@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { key: "timeline", href: "/timeline" },
   { key: "compare", href: "/compare" },
   { key: "layers", href: "/layers" },
-  // { key: "practice", href: "/practice", label: "Практика" },
+  { key: "practice", href: "/practice", label: "Практика" },
   { key: "consulting", href: "/consulting" },
 ] as const;
 
