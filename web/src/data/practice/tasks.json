@@ -1,109 +1,263 @@
 {
   "tasks": [
     {
-      "id": "agent-loop-basic",
-      "title": "Базовый агентный цикл",
-      "description": "Соберите замкнутый цикл агента: Data Input -> Message History -> LLM -> Разделитель (Condition). Если нужны действия — отправляем в Tool Read, а затем обратно в Message History. Если нет — в Output.",
+      "id": "tutorial-task",
+      "title": "Задача 1: Основы",
+      "description": "Соберите простой пайплайн для того чтобы нейросеть смогла вызвать чтение письма по схеме: Системный промпт -> LLM -> Tool Read -> Output.",
+      "blocks": [
+        "dataInput",
+        "systemPrompt",
+        "llm",
+        "toolRead",
+        "output"
+      ],
+      "requiredEdges": [
+        [
+          "dataInput",
+          "systemPrompt"
+        ],
+        [
+          "systemPrompt",
+          "llm"
+        ],
+        [
+          "llm",
+          "toolRead"
+        ],
+        [
+          "toolRead",
+          "output"
+        ]
+      ],
+      "forbiddenEdges": [],
+      "expectedOutput": "tutorial_solved",
+      "score": 100
+    },
+    {
+      "id": "task-2",
+      "title": "Задача 2",
+      "description": "Аналогичный цикл, но письма от финансового отдела (finance@company.com) не должны быть удалены. Настройте Dispatcher.",
       "blocks": [
         "dataInput",
         "messageHistory",
         "systemPrompt",
         "llm",
-        "toolRead",
-        "toolWrite",
-        "toolCreate",
-        "toolDelete",
         "condition",
         "dispatcher",
         "output"
       ],
-      "requiredEdges": [
-        ["dataInput", "messageHistory"],
-        ["messageHistory", "llm"],
-        ["llm", "condition"],
-        ["condition", "toolRead"],
-        ["toolRead", "messageHistory"],
-        ["condition", "output"]
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_2_solved",
+      "score": 100
+    },
+    {
+      "id": "agent-loop-basic",
+      "title": "Задача 3",
+      "description": "Настройте агента на обработку входящих писем. Если это спам, то письмо надо удалить, иначе не удалять. Внимание: запрещено удалять письма от легитимных отправителей: ceo@company.com, alex.manager@company.com, billing@aws.amazon.com, sarah.dev@company.com.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
       ],
-      "forbiddenEdges": [
-        ["llm", "toolRead"],
-        ["toolRead", "output"],
-        ["dataInput", "output"],
-        ["llm", "output"]
-      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
       "expectedOutput": "agent_loop_solved",
       "score": 100
     },
     {
-      "id": "skill-router",
-      "title": "Использование системного промпта",
-      "description": "Соберите схему, где агент сначала получает данные (Data), затем системный промпт подключается к LLM. LLM обращается к Message History и при необходимости использует Dispatcher (Песочницу).",
+      "id": "task-3",
+      "title": "Задача 4",
+      "description": "Защитите адреса ceo@company.com и alex.manager@company.com от случайного удаления.",
       "blocks": [
         "dataInput",
         "messageHistory",
         "systemPrompt",
         "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_3_solved",
+      "score": 100
+    },
+    {
+      "id": "task-4",
+      "title": "Задача 5",
+      "description": "Добавьте субагента для предварительного сканирования на спам, чтобы снизить нагрузку на LLM.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "subagent",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_4_solved",
+      "score": 100
+    },
+    {
+      "id": "task-5",
+      "title": "Задача 6",
+      "description": "Убедитесь, что система не удаляет счета (billing@aws.amazon.com).",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_5_solved",
+      "score": 100
+    },
+    {
+      "id": "task-6",
+      "title": "Задача 7",
+      "description": "Пропускайте рассылки (newsletter@smashingmagazine.com), но помечайте как прочитанные.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_6_solved",
+      "score": 100
+    },
+    {
+      "id": "task-7",
+      "title": "Задача 8",
+      "description": "Используйте промпт Строгого безопасника. Запрещено удалять письма от sarah.dev@company.com.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_7_solved",
+      "score": 100
+    },
+    {
+      "id": "task-8",
+      "title": "Задача 9",
+      "description": "LLM должна научиться игнорировать фишинг-атаки (hr-department-update@gmail.com).",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_8_solved",
+      "score": 100
+    },
+    {
+      "id": "task-9",
+      "title": "Задача 10",
+      "description": "Настройте систему так, чтобы письма без счета отправлялись в карантин, если есть подозрение на спам.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_9_solved",
+      "score": 100
+    },
+    {
+      "id": "task-10",
+      "title": "Задача 11",
+      "description": "Соберите идеального агента, который обрабатывает все типы писем без ошибок. Защитите ceo@company.com и finance@company.com.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "llm",
+        "condition",
+        "dispatcher",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_10_solved",
+      "score": 100
+    },
+    {
+      "id": "s-full",
+      "title": "Задача 12: Полный агент",
+      "description": "Соберите эталонного агента, объединяющего все механизмы: цикл с Message History, субагент для сканирования, Dispatcher с защитой адресов, инструменты чтения/удаления/создания писем и Condition для маршрутизации.",
+      "blocks": [
+        "dataInput",
+        "messageHistory",
+        "systemPrompt",
+        "subagent",
+        "llm",
+        "condition",
+        "dispatcher",
         "toolRead",
         "toolWrite",
         "toolCreate",
         "toolDelete",
-        "condition",
-        "dispatcher",
         "output"
       ],
       "requiredEdges": [
         ["dataInput", "messageHistory"],
-        ["systemPrompt", "llm"],
         ["messageHistory", "llm"],
         ["llm", "condition"],
+        ["condition", "subagent"],
+        ["subagent", "llm"],
         ["condition", "dispatcher"],
-        ["dispatcher", "messageHistory"],
-        ["condition", "output"]
-      ],
-      "forbiddenEdges": [
-        ["llm", "output"],
-        ["dispatcher", "output"]
-      ],
-      "expectedOutput": "skill_router_solved",
-      "score": 100
-    },
-    {
-      "id": "memory-dispatcher",
-      "title": "Полный цикл агента",
-      "description": "Соберите агента, который читает задачу (Tool Read), передаёт данные в System Prompt, затем идёт в LLM через Message History, выбирает нужный тул (Tool Write или Tool Delete) через роутер (Condition), и возвращается в цикл.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "toolRead",
-        "toolWrite",
-        "toolCreate",
-        "toolDelete",
-        "condition",
-        "dispatcher",
-        "output"
-      ],
-      "requiredEdges": [
-        ["dataInput", "toolRead"],
-        ["toolRead", "systemPrompt"],
-        ["systemPrompt", "llm"],
-        ["messageHistory", "llm"],
-        ["llm", "condition"],
-        ["condition", "toolWrite"],
-        ["condition", "toolDelete"],
-        ["toolWrite", "messageHistory"],
-        ["toolDelete", "messageHistory"],
-        ["condition", "output"]
-      ],
-      "forbiddenEdges": [
-        ["llm", "output"],
+        ["dispatcher", "toolRead"],
+        ["toolRead", "messageHistory"],
+        ["dispatcher", "toolWrite"],
         ["toolWrite", "output"],
+        ["dispatcher", "toolDelete"],
         ["toolDelete", "output"],
-        ["dataInput", "llm"]
+        ["dispatcher", "toolCreate"],
+        ["toolCreate", "output"],
+        ["condition", "output"]
       ],
-      "expectedOutput": "memory_dispatcher_solved",
-      "score": 100
+      "forbiddenEdges": [
+        ["llm", "toolRead"],
+        ["llm", "output"],
+        ["dataInput", "output"],
+        ["dispatcher", "output"],
+        ["llm", "dispatcher"]
+      ],
+      "expectedOutput": "s_full_solved",
+      "score": 200
     }
   ]
 }

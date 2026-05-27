@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/lib/i18n";
-import { Github, Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { key: "timeline", href: "/timeline" },
   { key: "compare", href: "/compare" },
   { key: "layers", href: "/layers" },
-  { key: "practice", href: "/practice", label: "Практика" },
+  // { key: "practice", href: "/practice", label: "Практика" },
   { key: "consulting", href: "/consulting" },
 ] as const;
 
@@ -25,13 +25,24 @@ export function Header() {
 
   useEffect(() => {
     setMounted(true);
-    setDark(document.documentElement.classList.contains("dark"));
+    const savedTheme = localStorage.getItem("theme");
+    const isDark = savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setDark(isDark);
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, []);
 
   function toggleDark() {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle("dark", next);
+    if (next) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
     localStorage.setItem("theme", next ? "dark" : "light");
   }
 
@@ -66,14 +77,7 @@ export function Header() {
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <span className="w-4 h-4 inline-block" />}
           </button>
 
-          <a
-            href="https://github.com/suer-tech/learn_agent"
-            target="_blank"
-            rel="noopener"
-            className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white"
-          >
-            <Github size={18} />
-          </a>
+
         </nav>
 
         {/* Mobile hamburger */}
@@ -106,14 +110,7 @@ export function Header() {
               >
                 {mounted ? (dark ? <Sun size={18} /> : <Moon size={18} />) : <span className="w-[18px] h-[18px] inline-block" />}
               </button>
-              <a
-                href="https://github.com/suer-tech/learn_agent"
-                target="_blank"
-                rel="noopener"
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white"
-              >
-                <Github size={18} />
-              </a>
+
             </div>
           </div>
         </div>

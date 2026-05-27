@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PracticeTrainer } from "@/components/practice/trainer";
-import { getCurrentUsername, getTask } from "@/lib/practice/server-store";
+import { getCurrentUsername, getTask, getTasks } from "@/lib/practice/server-store";
 
 export default async function PracticeTaskPage({
   params,
@@ -16,6 +16,8 @@ export default async function PracticeTaskPage({
   const task = await getTask(taskId);
   if (!task) notFound();
 
+  const allTasks = await getTasks();
+
   return (
     <div className="space-y-4 py-4">
       <Link
@@ -25,7 +27,7 @@ export default async function PracticeTaskPage({
         <ArrowLeft size={16} />
         К списку задач
       </Link>
-      <PracticeTrainer task={task} />
+      <PracticeTrainer task={task} allTasks={allTasks} />
     </div>
   );
 }

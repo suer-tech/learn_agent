@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.2; }
+}
+
 :root {
   --color-layer-tools: #3B82F6;
   --color-layer-planning: #10B981;
@@ -22,6 +27,13 @@
   --color-text: #fafafa;
   --color-text-secondary: #a1a1aa;
   --color-border: #27272a;
+
+  /* React Flow Dark Mode Overrides */
+  --xy-controls-button-background-color: #18181b;
+  --xy-controls-button-background-color-hover: #27272a;
+  --xy-controls-button-color: #fafafa;
+  --xy-controls-button-color-hover: #ffffff;
+  --xy-controls-button-border-color: #27272a;
 }
 
 body {
