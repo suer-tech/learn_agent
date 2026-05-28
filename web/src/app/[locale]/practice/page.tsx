@@ -33,7 +33,7 @@ export default async function PracticePage() {
           <div className="text-sm text-[var(--color-text-secondary)]">@{username}</div>
           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Практика</h1>
           <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-secondary)]">
-            Собирайте учебных агентов из блоков, запускайте симуляцию и проходите задачи по
+            Собирайте учебных агентов из блоков, запускайте их проверку и проходите задачи по
             архитектуре агентного цикла.
           </p>
         </div>

@@ -43,6 +43,8 @@ export type PracticeBlockType =
   | "toolWrite"
   | "toolCreate"
   | "toolDelete"
+  | "toolBash"
+  | "toolSearch"
   | "dispatcher"
   | "systemPrompt"
   | "subagent"

@@ -250,7 +250,7 @@ export function evaluateGraph(task: PracticeTask, graph: TrainerGraph): Evaluati
     score: passed ? task.score : Math.max(0, task.score - feedback.length * 15),
     result: passed ? task.expectedOutput : "graph_validation_failed",
     feedback: passed
-      ? ["Граф прошел структурную проверку, симуляция вернула ожидаемый финальный ответ."]
+      ? ["Граф прошел структурную проверку, получен ожидаемый финальный ответ."]
       : feedback,
   };
 }

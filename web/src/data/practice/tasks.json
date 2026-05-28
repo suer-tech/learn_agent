@@ -35,25 +35,91 @@
     },
     {
       "id": "task-2",
-      "title": "Задача 2",
-      "description": "Аналогичный цикл, но письма от финансового отдела (finance@company.com) не должны быть удалены. Настройте Dispatcher.",
+      "title": "Задача 2: Использование Bash в цикле",
+      "description": "Соберите агента, который должен узнать какие файлы лежат в директории проекта. Создайте цикл с тулом bash и развилкой (Condition) по схеме: Data Input -> System Prompt -> Message History -> LLM -> Condition -> (Tool Bash -> Message History) & (Output).",
       "blocks": [
         "dataInput",
-        "messageHistory",
         "systemPrompt",
+        "messageHistory",
         "llm",
         "condition",
-        "dispatcher",
+        "toolBash",
         "output"
       ],
-      "requiredEdges": [],
+      "requiredEdges": [
+        [
+          "dataInput",
+          "systemPrompt"
+        ],
+        [
+          "systemPrompt",
+          "messageHistory"
+        ],
+        [
+          "messageHistory",
+          "llm"
+        ],
+        [
+          "llm",
+          "condition"
+        ],
+        [
+          "condition",
+          "toolBash"
+        ],
+        [
+          "toolBash",
+          "messageHistory"
+        ],
+        [
+          "condition",
+          "output"
+        ]
+      ],
       "forbiddenEdges": [],
       "expectedOutput": "task_2_solved",
       "score": 100
     },
     {
+      "id": "task-3-files",
+      "title": "Задача 3: Работа с файлами",
+      "description": "Добавьте условие: сначала проверьте наличие файла 'счет на оплату' (инструмент поиска или Bash). Если файла нет, создайте его (Create). Убедитесь, что список обновился, и выходите.",
+      "blocks": [
+        "dataInput",
+        "systemPrompt",
+        "messageHistory",
+        "llm",
+        "condition",
+        "toolCreate",
+        "output",
+        "toolBash",
+        "toolSearch"
+      ],
+      "requiredEdges": [
+        [
+          "dataInput",
+          "systemPrompt"
+        ],
+        [
+          "systemPrompt",
+          "messageHistory"
+        ],
+        [
+          "messageHistory",
+          "llm"
+        ],
+        [
+          "llm",
+          "condition"
+        ]
+      ],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_3_files_solved",
+      "score": 100
+    },
+    {
       "id": "agent-loop-basic",
-      "title": "Задача 3",
+      "title": "Задача 4",
       "description": "Настройте агента на обработку входящих писем. Если это спам, то письмо надо удалить, иначе не удалять. Внимание: запрещено удалять письма от легитимных отправителей: ceo@company.com, alex.manager@company.com, billing@aws.amazon.com, sarah.dev@company.com.",
       "blocks": [
         "dataInput",
@@ -71,7 +137,7 @@
     },
     {
       "id": "task-3",
-      "title": "Задача 4",
+      "title": "Задача 5",
       "description": "Защитите адреса ceo@company.com и alex.manager@company.com от случайного удаления.",
       "blocks": [
         "dataInput",
@@ -89,7 +155,7 @@
     },
     {
       "id": "task-4",
-      "title": "Задача 5",
+      "title": "Задача 6",
       "description": "Добавьте субагента для предварительного сканирования на спам, чтобы снизить нагрузку на LLM.",
       "blocks": [
         "dataInput",
@@ -108,7 +174,7 @@
     },
     {
       "id": "task-5",
-      "title": "Задача 6",
+      "title": "Задача 7",
       "description": "Убедитесь, что система не удаляет счета (billing@aws.amazon.com).",
       "blocks": [
         "dataInput",
@@ -126,7 +192,7 @@
     },
     {
       "id": "task-6",
-      "title": "Задача 7",
+      "title": "Задача 8",
       "description": "Пропускайте рассылки (newsletter@smashingmagazine.com), но помечайте как прочитанные.",
       "blocks": [
         "dataInput",
@@ -144,7 +210,7 @@
     },
     {
       "id": "task-7",
-      "title": "Задача 8",
+      "title": "Задача 9",
       "description": "Используйте промпт Строгого безопасника. Запрещено удалять письма от sarah.dev@company.com.",
       "blocks": [
         "dataInput",
@@ -162,7 +228,7 @@
     },
     {
       "id": "task-8",
-      "title": "Задача 9",
+      "title": "Задача 10",
       "description": "LLM должна научиться игнорировать фишинг-атаки (hr-department-update@gmail.com).",
       "blocks": [
         "dataInput",
@@ -180,7 +246,7 @@
     },
     {
       "id": "task-9",
-      "title": "Задача 10",
+      "title": "Задача 11",
       "description": "Настройте систему так, чтобы письма без счета отправлялись в карантин, если есть подозрение на спам.",
       "blocks": [
         "dataInput",
@@ -198,7 +264,7 @@
     },
     {
       "id": "task-10",
-      "title": "Задача 11",
+      "title": "Задача 12",
       "description": "Соберите идеального агента, который обрабатывает все типы писем без ошибок. Защитите ceo@company.com и finance@company.com.",
       "blocks": [
         "dataInput",
@@ -216,7 +282,7 @@
     },
     {
       "id": "s-full",
-      "title": "Задача 12: Полный агент",
+      "title": "Задача 13: Полный агент",
       "description": "Соберите эталонного агента, объединяющего все механизмы: цикл с Message History, субагент для сканирования, Dispatcher с защитой адресов, инструменты чтения/удаления/создания писем и Condition для маршрутизации.",
       "blocks": [
         "dataInput",
@@ -233,28 +299,88 @@
         "output"
       ],
       "requiredEdges": [
-        ["dataInput", "messageHistory"],
-        ["messageHistory", "llm"],
-        ["llm", "condition"],
-        ["condition", "subagent"],
-        ["subagent", "llm"],
-        ["condition", "dispatcher"],
-        ["dispatcher", "toolRead"],
-        ["toolRead", "messageHistory"],
-        ["dispatcher", "toolWrite"],
-        ["toolWrite", "output"],
-        ["dispatcher", "toolDelete"],
-        ["toolDelete", "output"],
-        ["dispatcher", "toolCreate"],
-        ["toolCreate", "output"],
-        ["condition", "output"]
+        [
+          "dataInput",
+          "messageHistory"
+        ],
+        [
+          "messageHistory",
+          "llm"
+        ],
+        [
+          "llm",
+          "condition"
+        ],
+        [
+          "condition",
+          "subagent"
+        ],
+        [
+          "subagent",
+          "llm"
+        ],
+        [
+          "condition",
+          "dispatcher"
+        ],
+        [
+          "dispatcher",
+          "toolRead"
+        ],
+        [
+          "toolRead",
+          "messageHistory"
+        ],
+        [
+          "dispatcher",
+          "toolWrite"
+        ],
+        [
+          "toolWrite",
+          "output"
+        ],
+        [
+          "dispatcher",
+          "toolDelete"
+        ],
+        [
+          "toolDelete",
+          "output"
+        ],
+        [
+          "dispatcher",
+          "toolCreate"
+        ],
+        [
+          "toolCreate",
+          "output"
+        ],
+        [
+          "condition",
+          "output"
+        ]
       ],
       "forbiddenEdges": [
-        ["llm", "toolRead"],
-        ["llm", "output"],
-        ["dataInput", "output"],
-        ["dispatcher", "output"],
-        ["llm", "dispatcher"]
+        [
+          "llm",
+          "toolRead"
+        ],
+        [
+          "llm",
+          "output"
+        ],
+        [
+          "dataInput",
+          "output"
+        ],
+        [
+          "dispatcher",
+          "output"
+        ],
+        [
+          "llm",
+          "dispatcher"
+        ]
       ],
       "expectedOutput": "s_full_solved",
       "score": 200
