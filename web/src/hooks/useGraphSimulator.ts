@@ -535,7 +535,7 @@ export function useGraphSimulator() {
           dispatcherBlocked: false,
           pendingFeedback: null as string | null,
           dispatcherFeedback: null as string | null,
-        };
+        } as any;
 
         let currentNodeId: string | null = startNode.id;
         let iterations = 0;
@@ -798,7 +798,7 @@ export function useGraphSimulator() {
           if (currentNodeId) {
             let outgoingEdges = edges.filter((e) => e.source === currentNodeId);
             if (forcePort) {
-              const allowed = [forcePort];
+              const allowed: string[] = [forcePort];
               if (forcePort === "false") allowed.push("exit");
               if (forcePort === "true") allowed.push("search_bash", "create", "read", "write", "delete");
               if (["search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");

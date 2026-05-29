@@ -1290,7 +1290,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         if (!sysPrompt) return current;
 
         const existingTypes = new Set(current.filter(n => !n.data.isGhost).map(n => n.data.type));
-        const remaining = ["llm", "toolRead", "output"].filter(t => !existingTypes.has(t));
+        const remaining = (["llm", "toolRead", "output"] as PracticeBlockType[]).filter(t => !existingTypes.has(t));
         if (remaining.length === 0) return current.filter(n => !n.data.isGhost);
 
         const sysX = sysPrompt.position?.x ?? INITIAL_POSITIONS.systemPrompt.x;
@@ -1416,11 +1416,11 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
           id: "ghost-edge",
           source: dataInput.id,
           target: sysPrompt.id,
-          type: "smoothstep",
+          type: "smoothstep" as any,
           animated: true,
           style: { stroke: "#3b82f6", strokeDasharray: "8 8", strokeWidth: 2, opacity: 0.35 },
           markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6" },
-        });
+        } as any);
       }
     }
 
@@ -1432,11 +1432,11 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
           id: "ghost-edge-task2",
           source: toolBash.id,
           target: firstMessageHistory.id,
-          type: "smoothstep",
+          type: "smoothstep" as any,
           animated: true,
           style: { stroke: "#3b82f6", strokeDasharray: "8 8", strokeWidth: 2, opacity: 0.35 },
           markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6" },
-        });
+        } as any);
       }
     }
 
@@ -1529,7 +1529,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       if (hasSearch || hasBash) {
         missingBlocks = missingBlocks.filter(b => b !== "toolBash" && b !== "toolSearch");
       } else {
-        missingBlocks.push("toolSearch или toolBash");
+        missingBlocks.push("toolSearch или toolBash" as any);
       }
     }
 
@@ -1823,7 +1823,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
                     {!isArrow && !isSpecial && (
                       <span className={cn(
                         "rounded-md px-2.5 py-1 font-mono text-[11px] font-bold tracking-wide",
-                        existingTypes.has(item)
+                        existingTypes.has(item as PracticeBlockType)
                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 ring-1 ring-emerald-300 dark:ring-emerald-700"
                           : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 ring-1 ring-blue-300 dark:ring-blue-700"
                       )}>
@@ -1854,8 +1854,8 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
+            onNodesChange={onNodesChange as any}
+            onEdgesChange={onEdgesChange as any}
             onConnect={onConnect}
             onInit={setRfInstance}
             deleteKeyCode={["Backspace", "Delete"]}
