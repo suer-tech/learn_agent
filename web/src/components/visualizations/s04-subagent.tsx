@@ -12,48 +12,50 @@ interface MessageBlock {
 }
 
 const PARENT_BASE_MESSAGES_EN: MessageBlock[] = [
-  { id: "p1", label: "user: Build login + tests", color: "bg-blue-500" },
-  { id: "p2", label: "assistant: Planning approach...", color: "bg-zinc-600" },
-  { id: "p3", label: "tool_result: project structure", color: "bg-emerald-500" },
+  { id: "p1", label: "user: Find username in /data docs", color: "bg-blue-500" },
+  { id: "p2", label: "assistant: Delegating search...", color: "bg-zinc-600" },
+  { id: "p3", label: "tool_result: project context", color: "bg-emerald-500" },
 ];
 
 const PARENT_BASE_MESSAGES_RU: MessageBlock[] = [
-  { id: "p1", label: "user: Сделай логин + тесты", color: "bg-blue-500" },
-  { id: "p2", label: "assistant: Планирую подход...", color: "bg-zinc-600" },
-  { id: "p3", label: "tool_result: структура проекта", color: "bg-emerald-500" },
+  { id: "p1", label: "user: Найди имя пользователя в /data", color: "bg-blue-500" },
+  { id: "p2", label: "assistant: Делегирую поиск...", color: "bg-zinc-600" },
+  { id: "p3", label: "tool_result: контекст проекта", color: "bg-emerald-500" },
 ];
 
 const TASK_PROMPT_EN: MessageBlock = {
   id: "task",
-  label: "task: Write unit tests for auth",
+  label: "task: Find username in all /data files",
   color: "bg-purple-500",
 };
 
 const TASK_PROMPT_RU: MessageBlock = {
   id: "task",
-  label: "task: Написать unit-тесты для auth",
+  label: "task: Найти имя в документах /data",
   color: "bg-purple-500",
 };
 
 const CHILD_WORK_MESSAGES_EN: MessageBlock[] = [
-  { id: "c1", label: "tool_use: read auth.ts", color: "bg-amber-500" },
-  { id: "c2", label: "tool_use: write test.ts", color: "bg-amber-500" },
+  { id: "c1", label: "tool_use: read doc1.txt", color: "bg-amber-500" },
+  { id: "c2", label: "tool_use: read doc2.txt", color: "bg-amber-500" },
+  { id: "c3", label: "tool_use: read doc3.txt ✓", color: "bg-amber-500" },
 ];
 
 const CHILD_WORK_MESSAGES_RU: MessageBlock[] = [
-  { id: "c1", label: "tool_use: read auth.ts", color: "bg-amber-500" },
-  { id: "c2", label: "tool_use: write test.ts", color: "bg-amber-500" },
+  { id: "c1", label: "tool_use: read doc1.txt", color: "bg-amber-500" },
+  { id: "c2", label: "tool_use: read doc2.txt", color: "bg-amber-500" },
+  { id: "c3", label: "tool_use: read doc3.txt ✓", color: "bg-amber-500" },
 ];
 
 const SUMMARY_BLOCK_EN: MessageBlock = {
   id: "summary",
-  label: "summary: 3 tests written, all passing",
+  label: "summary: username = admin_vasya",
   color: "bg-teal-500",
 };
 
 const SUMMARY_BLOCK_RU: MessageBlock = {
   id: "summary",
-  label: "summary: 3 теста написаны, все проходят",
+  label: "summary: имя = admin_vasya",
   color: "bg-teal-500",
 };
 
@@ -61,32 +63,32 @@ const STEPS_EN = [
   {
     title: "Parent Context",
     description:
-      "The parent agent has accumulated messages from the conversation.",
+      "The parent agent has accumulated messages from the conversation. It needs to find a username in 50+ documents.",
   },
   {
     title: "Spawn Subagent",
     description:
-      "Task tool creates a child with fresh messages[]. Only the task description is passed.",
+      "Task tool creates a child with fresh messages[]. Only the search task is passed — not 50 file contents.",
   },
   {
     title: "Independent Work",
     description:
-      "The child has its own context. It doesn't see the parent's history.",
+      "The child reads doc1, doc2, doc3... Each file fills the CHILD's context, not the parent's.",
   },
   {
     title: "Compress Result",
     description:
-      "The child's full conversation compresses into one summary.",
+      "The child found the username. Its full conversation (3+ file reads) compresses into one line.",
   },
   {
     title: "Return Summary",
     description:
-      "Only the summary returns. The child's full context is discarded.",
+      "Only 'username = admin_vasya' returns. The child's 3 file reads are discarded.",
   },
   {
     title: "Clean Context",
     description:
-      "The parent gets a clean summary without context bloat. This is fresh-context isolation via messages[].",
+      "The parent gets a clean answer: 1 line instead of 3 file contents. This is context isolation via fresh messages[].",
   },
 ];
 
@@ -94,32 +96,32 @@ const STEPS_RU = [
   {
     title: "Контекст родителя",
     description:
-      "У родительского агента уже накопились сообщения из диалога.",
+      "У родительского агента уже накопились сообщения. Нужно найти имя пользователя в 50+ документах.",
   },
   {
     title: "Запуск подагента",
     description:
-      "Инструмент Task создаёт ребёнка со свежим messages[]. Передаётся только описание задачи.",
+      "Инструмент Task создаёт ребёнка со свежим messages[]. Передаётся только задание — не содержимое 50 файлов.",
   },
   {
     title: "Независимая работа",
     description:
-      "У ребёнка свой контекст. Он не видит истории родителя.",
+      "Ребёнок читает doc1, doc2, doc3... Каждый файл заполняет контекст РЕБЁНКА, а не родителя.",
   },
   {
     title: "Сжатие результата",
     description:
-      "Весь диалог ребёнка сжимается в одну сводку.",
+      "Ребёнок нашёл имя. Весь его диалог (3+ чтения файлов) сжимается в одну строку.",
   },
   {
     title: "Возврат сводки",
     description:
-      "Возвращается только сводка. Полный контекст ребёнка отбрасывается.",
+      "Возвращается только 'имя = admin_vasya'. 3 прочитанных файла ребёнка отбрасываются.",
   },
   {
     title: "Чистый контекст",
     description:
-      "Родитель получает чистую сводку без раздувания контекста. Это изоляция через свежий messages[].",
+      "Родитель получает чистый ответ: 1 строка вместо 3 файлов. Это изоляция через свежий messages[].",
   },
 ];
 
@@ -188,11 +190,11 @@ export default function SubagentIsolation({ title }: { title?: string }) {
           freshMessages: "messages[] (свежий)",
           isolation: "ИЗОЛЯЦИЯ",
           notSpawned: "пока не запущен",
-          compressing: "Сжимаем полный контекст в сводку...",
+          compressing: "Сжимаем 3 прочитанных файла в одну строку...",
           contextDiscarded: "контекст отброшен",
           cleanContextNote: "3 исходных + 1 сводка = чистый контекст",
           taskPrompt: "task prompt",
-          summary: "summary",
+          summary: "admin_vasya",
         }
       : {
           parentProcess: "Parent Process",
@@ -200,11 +202,11 @@ export default function SubagentIsolation({ title }: { title?: string }) {
           freshMessages: "messages[] (fresh)",
           isolation: "ISOLATION",
           notSpawned: "not yet spawned",
-          compressing: "Compressing full context into summary...",
+          compressing: "Compressing 3 file reads into one line...",
           contextDiscarded: "context discarded",
           cleanContextNote: "3 original + 1 summary = clean context",
           taskPrompt: "task prompt",
-          summary: "summary",
+          summary: "admin_vasya",
         };
 
   // Derive what to show in each container based on step

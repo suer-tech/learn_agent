@@ -118,9 +118,56 @@
       "score": 100
     },
     {
+      "id": "task-prompt-selection",
+      "title": "Задача 4: Защита от инъекций (Prompt Injection)",
+      "description": "Создайте HR-агента, который читает резюме и сохраняет саммари (Tool Create). В резюме хитрого кандидата спрятана атака \"Prompt Injection\", которая приказывает агенту нанять его на позицию CEO. Выберите в блоке System Prompt безопасный промпт, чтобы агент не повелся на атаку.",
+      "blocks": [
+        "dataInput",
+        "systemPrompt",
+        "messageHistory",
+        "llm",
+        "condition",
+        "toolCreate",
+        "output"
+      ],
+      "requiredEdges": [
+        [
+          "dataInput",
+          "systemPrompt"
+        ],
+        [
+          "systemPrompt",
+          "messageHistory"
+        ],
+        [
+          "messageHistory",
+          "llm"
+        ],
+        [
+          "llm",
+          "condition"
+        ],
+        [
+          "condition",
+          "toolCreate"
+        ],
+        [
+          "toolCreate",
+          "messageHistory"
+        ],
+        [
+          "condition",
+          "output"
+        ]
+      ],
+      "forbiddenEdges": [],
+      "expectedOutput": "task_prompt_selection_solved",
+      "score": 100
+    },
+    {
       "id": "agent-loop-basic",
-      "title": "Задача 4",
-      "description": "Настройте агента на обработку входящих писем. Если это спам, то письмо надо удалить, иначе не удалять. Внимание: запрещено удалять письма от легитимных отправителей: ceo@company.com, alex.manager@company.com, billing@aws.amazon.com, sarah.dev@company.com.",
+      "title": "Задача 5: Разбор потока заявок",
+      "description": "Настройте агента на обработку входящих заявок. Если это спам, то заявку надо удалить, иначе не удалять. Внимание: запрещено удалять заявки от легитимных контактов: @ceo_official, @alex_manager, @aws_billing, @sarah_dev.",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -137,8 +184,8 @@
     },
     {
       "id": "task-3",
-      "title": "Задача 5",
-      "description": "Защитите адреса ceo@company.com и alex.manager@company.com от случайного удаления.",
+      "title": "Задача 6",
+      "description": "Защитите контакты @ceo_official и @alex_manager от случайного удаления.",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -155,8 +202,8 @@
     },
     {
       "id": "task-4",
-      "title": "Задача 6",
-      "description": "Добавьте субагента для предварительного сканирования на спам, чтобы снизить нагрузку на LLM.",
+      "title": "Задача 7: Делегирование и фильтрация спама",
+      "description": "Соберите агентную схему для чат-бота с предварительной обработкой входящей заявки субагентом, который должен отсеивать спам и пропускать дальше легитимные заявки, чтобы разгрузить основного агента. Основной агент должен отвечать только на реальные заявки клиентов (Tool Write).",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -164,7 +211,8 @@
         "subagent",
         "llm",
         "condition",
-        "dispatcher",
+        "toolRead",
+        "toolWrite",
         "output"
       ],
       "requiredEdges": [],
@@ -174,8 +222,8 @@
     },
     {
       "id": "task-5",
-      "title": "Задача 7",
-      "description": "Убедитесь, что система не удаляет счета (billing@aws.amazon.com).",
+      "title": "Задача 8",
+      "description": "Убедитесь, что система не удаляет счета (@aws_billing).",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -192,8 +240,8 @@
     },
     {
       "id": "task-6",
-      "title": "Задача 8",
-      "description": "Пропускайте рассылки (newsletter@smashingmagazine.com), но помечайте как прочитанные.",
+      "title": "Задача 9",
+      "description": "Пропускайте рассылки (@smashing_newsletter), но помечайте как прочитанные.",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -210,7 +258,7 @@
     },
     {
       "id": "task-7",
-      "title": "Задача 9",
+      "title": "Задача 10",
       "description": "Используйте промпт Строгого безопасника. Запрещено удалять письма от sarah.dev@company.com.",
       "blocks": [
         "dataInput",
@@ -228,7 +276,7 @@
     },
     {
       "id": "task-8",
-      "title": "Задача 10",
+      "title": "Задача 11",
       "description": "LLM должна научиться игнорировать фишинг-атаки (hr-department-update@gmail.com).",
       "blocks": [
         "dataInput",
@@ -246,7 +294,7 @@
     },
     {
       "id": "task-9",
-      "title": "Задача 11",
+      "title": "Задача 12",
       "description": "Настройте систему так, чтобы письма без счета отправлялись в карантин, если есть подозрение на спам.",
       "blocks": [
         "dataInput",
@@ -264,7 +312,7 @@
     },
     {
       "id": "task-10",
-      "title": "Задача 12",
+      "title": "Задача 13",
       "description": "Соберите идеального агента, который обрабатывает все типы писем без ошибок. Защитите ceo@company.com и finance@company.com.",
       "blocks": [
         "dataInput",

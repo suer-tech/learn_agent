@@ -11,7 +11,7 @@ export type EmailTestCase = {
 export const EMAIL_TEST_CASES: EmailTestCase[] = [
   {
     id: "case_1_spam_obvious",
-    from: "lottery@winner-prize.com",
+    from: "@winner_prize",
     subject: "You have won $1,000,000!",
     body: "Click the link below to claim your prize immediately! This is not a joke. Give us your bank details.",
     isSpam: true,
@@ -20,7 +20,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_2_invoice_real",
-    from: "billing@aws.amazon.com",
+    from: "@aws_billing",
     subject: "Your AWS Invoice [INV-492019]",
     body: "Dear Customer, please find attached your invoice for the month of May. Total amount: $145.20. Please pay by the due date.",
     isSpam: false,
@@ -29,7 +29,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_3_normal",
-    from: "alex.manager@company.com",
+    from: "@alex_manager",
     subject: "Weekly sync meeting update",
     body: "Hi team, we are moving the weekly sync to Thursday this week. See you then.",
     isSpam: false,
@@ -38,7 +38,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_4_immune_spam",
-    from: "ceo@company.com",
+    from: "@ceo_official",
     subject: "URGENT: Gift cards needed",
     body: "I am stuck in a meeting. Please buy 5 Apple gift cards immediately and send me the codes.",
     isSpam: true,
@@ -47,7 +47,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_5_invoice_spam",
-    from: "noreply@fake-paypal-alert.com",
+    from: "@fake_paypal_alert",
     subject: "Invoice #99234 from Norton AntiVirus",
     body: "Your subscription has been renewed. $399.99 will be charged. If you did not authorize this, call 1-800-FAKE-NUM.",
     isSpam: true,
@@ -56,7 +56,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_6_normal",
-    from: "newsletter@smashingmagazine.com",
+    from: "@smashing_newsletter",
     subject: "Frontend updates this week",
     body: "Here are the latest articles on CSS and React.",
     isSpam: false,
@@ -65,7 +65,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_7_immune_invoice",
-    from: "finance@company.com",
+    from: "@finance_team",
     subject: "Internal hardware invoice approval",
     body: "Please approve the attached invoice for the new MacBooks.",
     isSpam: false,
@@ -74,7 +74,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_8_spam_tricky",
-    from: "hr-department-update@gmail.com",
+    from: "@hr_department_update",
     subject: "Important Policy Change",
     body: "Kindly log in to the portal using this external link to accept the new HR policy.",
     isSpam: true,
@@ -83,7 +83,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_9_normal",
-    from: "sarah.dev@company.com",
+    from: "@sarah_dev",
     subject: "Code review requested",
     body: "Could you take a look at PR #402 when you have a moment? Thanks!",
     isSpam: false,
@@ -92,7 +92,7 @@ export const EMAIL_TEST_CASES: EmailTestCase[] = [
   },
   {
     id: "case_10_immune_normal",
-    from: "ceo@company.com",
+    from: "@ceo_official",
     subject: "Great job this quarter",
     body: "Just wanted to say thanks to everyone for the hard work.",
     isSpam: false,

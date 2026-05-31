@@ -15,10 +15,10 @@ export type LogEntry = {
 };
 
 export const LEGITIMATE_SENDERS = [
-  "ceo@company.com",
-  "alex.manager@company.com",
-  "billing@aws.amazon.com",
-  "sarah.dev@company.com"
+  "@ceo_official",
+  "@alex_manager",
+  "@aws_billing",
+  "@sarah_dev"
 ];
 
 
@@ -48,14 +48,18 @@ type Vulnerability =
   | { type: "unprotected_sender"; sender: string }
   | { type: "overprotected_sender"; sender: string }
   | { type: "missing_delete_tool" }
-  | { type: "missing_message_history" };
+  | { type: "missing_message_history" }
+  | { type: "missing_subagent" }
+  | { type: "wrong_subagent_prompt" }
+  | { type: "wrong_system_prompt" }
+  | { type: "missing_write_tool" };
 
 type TargetedTestCase = EmailTestCase & { forceHallucination: boolean };
 
 function analyzeGraphVulnerabilities(nodes: any[], edges: any[], taskId?: string): Vulnerability[] {
   const vulnerabilities: Vulnerability[] = [];
   const requiredProtected = getRequiredProtectedEmails(taskId);
-  
+
   if (requiredProtected.length === 0) return []; // No specific requirements
 
   const dispatcherNode = nodes.find((n) => n.data.type === "dispatcher");
@@ -63,8 +67,27 @@ function analyzeGraphVulnerabilities(nodes: any[], edges: any[], taskId?: string
   const hasToolDelete = nodes.some((n) => n.data.type === "toolDelete");
   const hasMessageHistory = nodes.some((n) => n.data.type === "messageHistory");
 
+  const sysTools = systemPromptNode?.data?.systemPromptTools || [];
+  const dispatcherTools = dispatcherNode?.data?.dispatcherTools || [];
+
   if (!hasMessageHistory) {
     vulnerabilities.push({ type: "missing_message_history" });
+  }
+
+  if (taskId === "task-4") {
+    const subNode = nodes.find(n => n.data.type === "subagent");
+    if (!subNode) {
+      vulnerabilities.push({ type: "missing_subagent" });
+    } else if (subNode.data.selectedPromptId !== "sub_spam_filter" && subNode.data.selectedPromptId !== "sub_scanner") {
+      vulnerabilities.push({ type: "wrong_subagent_prompt" });
+    }
+    const sysPromptNodeId = systemPromptNode?.data?.selectedPromptId;
+    if (sysPromptNodeId !== "sp_support_smart") {
+      vulnerabilities.push({ type: "wrong_system_prompt" });
+    }
+    if (!sysTools.includes("write") || (dispatcherNode && !dispatcherTools.includes("write"))) {
+      vulnerabilities.push({ type: "missing_write_tool" });
+    }
   }
 
   if (!dispatcherNode) {
@@ -73,13 +96,13 @@ function analyzeGraphVulnerabilities(nodes: any[], edges: any[], taskId?: string
     }
   } else {
     const protectedEmails: string[] = dispatcherNode.data.dispatcherProtectedEmails || [];
-    
+
     for (const sender of requiredProtected) {
       if (!protectedEmails.includes(sender)) {
         vulnerabilities.push({ type: "unprotected_sender", sender });
       }
     }
-    
+
     for (const email of protectedEmails) {
       if (!LEGITIMATE_SENDERS.includes(email) && !requiredProtected.includes(email)) {
         vulnerabilities.push({ type: "overprotected_sender", sender: email });
@@ -87,9 +110,6 @@ function analyzeGraphVulnerabilities(nodes: any[], edges: any[], taskId?: string
     }
   }
 
-  const sysTools = systemPromptNode?.data?.systemPromptTools || [];
-  const dispatcherTools = dispatcherNode?.data?.dispatcherTools || [];
-  
   if (!sysTools.includes("delete") || (dispatcherNode && !dispatcherTools.includes("delete"))) {
     vulnerabilities.push({ type: "missing_delete_tool" });
   }
@@ -99,15 +119,15 @@ function analyzeGraphVulnerabilities(nodes: any[], edges: any[], taskId?: string
 
 function generateTargetedTestCases(count: number, vulnerabilities: Vulnerability[]): TargetedTestCase[] {
   const cases: TargetedTestCase[] = [];
-  
+
   for (let runIdx = 0; runIdx < count; runIdx++) {
     let selectedCase: EmailTestCase | null = null;
     let forceHallucination = false;
-    
+
     // Inject attack on the FIRST run if vulnerabilities exist, otherwise random
     if (vulnerabilities.length > 0 && runIdx === 0) {
       const vuln = vulnerabilities[0];
-      
+
       if (vuln.type === "missing_message_history") {
         selectedCase = EMAIL_TEST_CASES.find(c => c.id === "case_3_normal") || null;
       } else if (vuln.type === "no_dispatcher" || vuln.type === "unprotected_sender") {
@@ -125,19 +145,23 @@ function generateTargetedTestCases(count: number, vulnerabilities: Vulnerability
         }
       } else if (vuln.type === "missing_delete_tool") {
         selectedCase = EMAIL_TEST_CASES.find(c => c.isSpam && !c.isImmune) || null;
+      } else if (vuln.type === "missing_subagent" || vuln.type === "wrong_subagent_prompt" || vuln.type === "wrong_system_prompt") {
+        selectedCase = EMAIL_TEST_CASES.find(c => c.isSpam && c.id === "case_8_spam_tricky") || EMAIL_TEST_CASES.find(c => c.isSpam) || null;
+      } else if (vuln.type === "missing_write_tool") {
+        selectedCase = EMAIL_TEST_CASES.find(c => !c.isSpam) || null;
       }
     }
-    
+
     if (!selectedCase) {
       selectedCase = EMAIL_TEST_CASES[Math.floor(Math.random() * EMAIL_TEST_CASES.length)];
     }
-    
+
     cases.push({
       ...selectedCase,
       forceHallucination
     });
   }
-  
+
   return cases;
 }
 
@@ -146,7 +170,7 @@ export function useGraphSimulator() {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [testCase, setTestCase] = useState<TargetedTestCase | null>(null);
-  
+
   const cancelRef = useRef<boolean>(false);
   const currentRunIndexRef = useRef<number>(-1);
 
@@ -182,11 +206,11 @@ export function useGraphSimulator() {
         addLog("system", "Запуск статической валидации графа (Задача 1)...", "info");
         await new Promise((resolve) => setTimeout(resolve, 800));
         if (cancelRef.current) return;
-        
+
         const requiredSequence = ["dataInput", "systemPrompt", "llm", "toolRead", "output"];
         let isValid = true;
         let lastNodeId: string | null = null;
-        
+
         if (nodes.length !== requiredSequence.length) {
           isValid = false;
         }
@@ -195,13 +219,13 @@ export function useGraphSimulator() {
           if (cancelRef.current) break;
           const blockType = requiredSequence[i];
           const node = nodes.find(n => n.data.type === blockType);
-          
+
           if (!node) {
             isValid = false;
             addLog("system", `Ошибка: Отсутствует необходимый блок "${blockType}".`, "error");
             break;
           }
-          
+
           if (i > 0 && lastNodeId) {
             const edge = edges.find(e => e.source === lastNodeId && e.target === node.id);
             if (!edge) {
@@ -210,10 +234,10 @@ export function useGraphSimulator() {
               break;
             }
           }
-          
+
           lastNodeId = node.id;
           setActiveNodeId(node.id);
-          
+
           if (blockType === "dataInput") {
             addLog("dataInput", "Входные данные загружены. Получено новое письмо для анализа.", "info");
           } else if (blockType === "systemPrompt") {
@@ -225,19 +249,19 @@ export function useGraphSimulator() {
           } else if (blockType === "output") {
             addLog("output", "Пайплайн успешно завершен. Результат чтения передан на выход.", "info");
           }
-          
+
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-        
+
         if (cancelRef.current) return;
         setActiveNodeId(null);
-        
+
         if (isValid && nodes.length === requiredSequence.length) {
           addLog("system", "РАН ПРОЙДЕН УСПЕШНО!", "success");
         } else {
           addLog("system", "РАН ПРОВАЛЕН: Блоки должны быть соединены строго в последовательности: Data Input -> System Prompt -> LLM -> Tool Read -> Output. Лишние блоки запрещены.", "error");
         }
-        
+
         setIsRunning(false);
         return;
       }
@@ -280,6 +304,7 @@ export function useGraphSimulator() {
           taskProgress: { ...scenario.initialProgress } as TaskProgress,
           lastRequestedTool: null as string | null,
           llmAction: null as string | null,
+          activePromptId: null as string | null,
         };
 
         let currentNodeId: string | null = startNode.id;
@@ -330,6 +355,7 @@ export function useGraphSimulator() {
             // --- System Prompt ---
             case "systemPrompt": {
               const promptId = currentNode.data.selectedPromptId || null;
+              mem.activePromptId = promptId;
               const promptDef = SYSTEM_PROMPTS.find((p) => p.id === promptId);
               if (promptDef) {
                 mem.transientBuffer.push({ role: "system", content: promptDef.text ?? promptDef.label });
@@ -381,7 +407,7 @@ export function useGraphSimulator() {
                   addLog("llm", `Я не вижу ответа от инструмента '${mem.lastRequestedTool}' в своей истории. Попробую запросить его снова!`, "warning");
                   // llmAction не меняется — агент снова запросит тот же тул → бесконечный цикл
                   mem.llmMemory.push({ role: "assistant", content: `Повторный запрос инструмента: ${mem.lastRequestedTool}` });
-                  const lastStep = scenario.steps.find((s) => s.condition(mem.taskProgress));
+                  const lastStep = scenario.steps.find((s) => s.condition(mem.taskProgress, mem.activePromptId));
                   if (lastStep) mem.llmAction = lastStep.llmAction === "false" ? "false" : (lastStep.llmAction || "true");
                   else mem.llmAction = "false";
                   break;
@@ -391,7 +417,7 @@ export function useGraphSimulator() {
               }
 
               // Правило 3: найти подходящий шаг сценария
-              const activeStep = scenario.steps.find((s) => s.condition(mem.taskProgress));
+              const activeStep = scenario.steps.find((s) => s.condition(mem.taskProgress, mem.activePromptId));
               if (!activeStep) {
                 addLog("llm", "Все подзадачи выполнены. Завершаю работу.", "success");
                 mem.llmAction = "false";
@@ -434,7 +460,14 @@ export function useGraphSimulator() {
             // --- Tools ---
             case "toolBash":
             case "toolSearch":
-            case "toolCreate": {
+            case "toolCreate":
+            case "toolRead":
+            case "toolWrite":
+            case "toolDelete": {
+              if (mem.llmAction === "false" || mem.llmAction === "exit" || !mem.llmAction) {
+                addLog("system", `ОШИБКА ГРАФА: Блок ${ntype} получил управление, но LLM не инициировала вызов (возможно, инструмент не предоставлен в промпте). Действие пропущено.`, "error");
+                break;
+              }
               const goesToMH = edges.some((e: any) => e.source === currentNodeId && nodes.find((n: any) => n.id === e.target)?.data.type === "messageHistory");
               const toolDef = scenario.toolResults[ntype];
               if (toolDef) {
@@ -471,7 +504,7 @@ export function useGraphSimulator() {
               if (forcePort === "false") allowed.push("exit");
               if (forcePort === "true") allowed.push("search_bash", "create", "read", "write", "delete");
               if (["search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");
-              
+
               outEdges = outEdges.filter((e: any) => allowed.includes(e.sourceHandle));
             }
             if (outEdges.length === 0) {
@@ -489,10 +522,10 @@ export function useGraphSimulator() {
 
         if (!runBroken && !reachedOutput) {
           addLog("system", "ЗАДАЧА ПРОВАЛЕНА: ОШИБКА: Работа агента была прервана (блок Output не достигнут).", "error");
-        } else if (!runBroken && scenario.successCondition(mem.taskProgress)) {
+        } else if (!runBroken && scenario.successCondition(mem.taskProgress, mem.activePromptId)) {
           addLog("system", "ЗАДАЧА УСПЕШНО ВЫПОЛНЕНА!", "success");
         } else if (!runBroken) {
-          addLog("system", `ЗАДАЧА ПРОВАЛЕНА: ${scenario.failMessage(mem.taskProgress)}`, "error");
+          addLog("system", `ЗАДАЧА ПРОВАЛЕНА: ${scenario.failMessage(mem.taskProgress, mem.activePromptId)}`, "error");
         }
 
         return;
@@ -508,14 +541,14 @@ export function useGraphSimulator() {
       for (let runIndex = 0; runIndex < runsCount; runIndex++) {
         if (cancelRef.current) break;
         currentRunIndexRef.current = runIndex;
-        
+
         const randomCase = testCases[runIndex];
         setTestCase(randomCase);
-        
+
         if (runsCount > 1) {
-          addLog("system", `=== Письмо ${runIndex + 1} из ${runsCount} ===`, "info");
+          addLog("system", `=== Запуск ${runIndex + 1} из ${runsCount} ===`, "info");
         }
-        addLog("system", `Старт пайплайна. Выбрана задача: Обработка письма от ${randomCase.from}`);
+        addLog("system", `Старт пайплайна. Обработка новой заявки.`);
 
         const startNode = nodes.find((n) => n.data.type === "dataInput");
         if (!startNode) {
@@ -528,13 +561,18 @@ export function useGraphSimulator() {
           emailRead: false,
           pendingEmailRead: false,
           emailDeleted: false,
+          emailReplied: false,
           activePromptId: null as string | null,
           hasSecurityScanner: false,
-          llmAction: null as "read" | "delete" | "exit" | null,
+          subagentResult: null as "spam" | "not_spam" | null,
+          llmAction: null as "read" | "delete" | "write" | "exit" | null,
+          llmFailed: false,
           llmActionReason: "",
           dispatcherBlocked: false,
           pendingFeedback: null as string | null,
           dispatcherFeedback: null as string | null,
+          transientBuffer: [] as any[],
+          llmMemory: [] as any[],
         } as any;
 
         let currentNodeId: string | null = startNode.id;
@@ -558,12 +596,12 @@ export function useGraphSimulator() {
           }
 
           setActiveNodeId(currentNode.id);
-          
+
           await new Promise((resolve) => setTimeout(resolve, 800));
           if (cancelRef.current) break;
 
           const type = currentNode.data.type;
-          
+
           if (type === "llm") {
             llmVisits++;
             if (llmVisits > 5) {
@@ -577,7 +615,7 @@ export function useGraphSimulator() {
 
           switch (type) {
             case "dataInput":
-              addLog("dataInput", `Письмо загружено. Тема: "${randomCase.subject}"`);
+              addLog("dataInput", `Заявка загружена.\nОт: ${randomCase.from}\nТекст: ${randomCase.body.substring(0, 100)}...`);
               break;
 
             case "systemPrompt":
@@ -587,13 +625,32 @@ export function useGraphSimulator() {
               break;
 
             case "subagent":
+              if (!state.pendingEmailRead && !state.emailRead) {
+                addLog("system", "ОШИБКА: Субагент попытался проанализировать заявку, но её текст еще не был прочитан (нужен блок Чтения).", "error");
+                addLog("subagent", "Не могу проанализировать заявку: нет текста.", "error");
+                state.subagentResult = "not_spam";
+                breakRun = true;
+                break;
+              }
               const subagentId = currentNode.data.selectedPromptId;
-              if (subagentId === "sub_scanner") {
+              if (!subagentId) {
+                state.llmFailed = true;
+                addLog("system", "ОШИБКА: У Субагента не выбран промпт, он не знает, что делать!", "error");
+                addLog("subagent", "Я не настроен (отсутствует инструкция/промпт).", "error");
+                breakRun = true;
+                break;
+              }
+              if (subagentId === "sub_scanner" || subagentId === "sub_spam_filter") {
                 state.hasSecurityScanner = true;
-                state.transientBuffer.push({ role: "tool", content: `Security Scanner: SPAM=${randomCase.isSpam}, INVOICE=${randomCase.hasInvoice}`, toolName: "subagent" });
-                addLog("subagent", `Security Scanner обнаружил: SPAM=${randomCase.isSpam}, INVOICE=${randomCase.hasInvoice}`, "success");
+                const spamTag = randomCase.isSpam ? "[SPAM]" : "[LEGIT]";
+                const invoiceTag = randomCase.hasInvoice ? ", [INVOICE: true]" : "";
+                const tagStr = subagentId === "sub_scanner" ? `[SPAM: ${randomCase.isSpam}]${invoiceTag}` : spamTag;
+                state.subagentResult = randomCase.isSpam ? "spam" : "not_spam";
+                state.transientBuffer.push({ role: "tool", content: `Субагент: ${tagStr}`, toolName: "subagent" });
+                addLog("subagent", `Субагент проанализировал текст. Результат: ${tagStr}`, "success");
               } else {
-                addLog("subagent", `Субагент проанализировал текст.`);
+                state.transientBuffer.push({ role: "tool", content: `Субагент: текст обработан согласно базовой инструкции.`, toolName: "subagent" });
+                addLog("subagent", `Субагент проанализировал текст и выполнил общую команду.`);
               }
               break;
 
@@ -609,7 +666,7 @@ export function useGraphSimulator() {
               } else if (state.pendingEmailRead) {
                 state.emailRead = true;
                 state.pendingEmailRead = false;
-                addLog("messageHistory", "История сообщений обновлена. Текст письма передан в LLM.", "success");
+                addLog("messageHistory", "История сообщений обновлена. Текст заявки передан в LLM.", "success");
               } else {
                 addLog("messageHistory", "История сообщений проверена. Новых данных нет.");
               }
@@ -620,7 +677,7 @@ export function useGraphSimulator() {
 
               if (state.pendingFeedback && !state.dispatcherFeedback) {
                 addLog("system", "ВНИМАНИЕ: LLM не видит результат работы инструмента, так как он не был передан через Message History!", "warning");
-                addLog("llm", "Я не получил ответ от инструмента! В целях безопасности решаю УДАЛИТЬ это письмо вслепую.", "warning");
+                addLog("llm", "Я не получил ответ от инструмента! В целях безопасности решаю УДАЛИТЬ эту заявку вслепую.", "warning");
                 state.llmAction = "delete";
                 state.pendingFeedback = null;
                 break;
@@ -638,7 +695,7 @@ export function useGraphSimulator() {
                   addLog("llm", `Получил сообщение: "${fb}". Понял ошибку, завершаю работу.`, "success");
                   break;
                 } else if (fb.includes("прочитан")) {
-                  addLog("llm", `Получил результат: "${fb}". Анализирую текст письма...`, "success");
+                  addLog("llm", `Получил результат: "${fb}". Анализирую текст заявки...`, "success");
                 } else {
                   state.llmAction = "exit";
                   addLog("llm", `Получил результат: "${fb}". Задача выполнена, завершаю цикл.`, "success");
@@ -648,17 +705,18 @@ export function useGraphSimulator() {
 
               if (state.pendingEmailRead) {
                 addLog("system", "ВНИМАНИЕ: LLM не видит результат инструмента — он не передан через Message History!", "warning");
-                addLog("llm", "Не получил текст письма! Удаляю вслепую.", "warning");
+                addLog("llm", "Не получил текст заявки! Удаляю вслепую.", "warning");
                 state.llmAction = "delete";
               } else if (!state.emailRead) {
                 const sysNode2 = nodes.find((n: any) => n.data.type === "systemPrompt");
                 const sysTools2 = sysNode2?.data?.systemPromptTools || [];
                 if (sysTools2.includes("read")) {
                   state.llmAction = "read";
-                  addLog("llm", "Я не знаю содержания письма. Запрашиваю инструмент ReadEmail.");
+                  addLog("llm", "Я не знаю содержания заявки. Запрашиваю инструмент Read.");
                 } else {
+                  state.llmFailed = true;
                   state.llmAction = "exit";
-                  addLog("llm", "Я не знаю содержания письма, но инструмент чтения (ReadEmail) не предоставлен. Завершаю работу.", "warning");
+                  addLog("llm", "ОШИБКА: Я не знаю содержания заявки, но инструмент чтения (Read) не предоставлен.", "error");
                 }
               } else {
                 const sysNode2 = nodes.find((n: any) => n.data.type === "systemPrompt");
@@ -666,44 +724,78 @@ export function useGraphSimulator() {
                 const promptDef = SYSTEM_PROMPTS.find((p: any) => p.id === state.activePromptId);
                 const isSafe = promptDef?.isSecurityAware || state.hasSecurityScanner;
 
-                if (randomCase.forceHallucination) {
+                if (taskId === "task-4") {
+                  const isSmart = promptDef?.id === "sp_support_smart";
+                  const hasTag = state.hasSecurityScanner;
+
+                  if (randomCase.isSpam) {
+                    if (hasTag && isSmart) {
+                      state.llmAction = "exit";
+                      addLog("llm", "Субагент пометил заявку как СПАМ. Игнорирую её.", "success");
+                    } else {
+                      if (sysTools2.includes("write")) {
+                        state.llmAction = "write";
+                        addLog("llm", "Я не распознал спам (или моя инструкция велит отвечать всем). Отправляю ответ!", "warning");
+                      } else {
+                        state.llmFailed = true;
+                        state.llmAction = "exit";
+                        addLog("llm", "ОШИБКА: Похоже на заявку, но инструмента Write нет. Завершаю работу с ошибкой.", "error");
+                      }
+                    }
+                  } else {
+                    if (sysTools2.includes("write")) {
+                      state.llmAction = "write";
+                      addLog("llm", "Это легитимная заявка от клиента. Формирую и отправляю ответ.", "success");
+                    } else {
+                      state.llmFailed = true;
+                      state.llmAction = "exit";
+                      addLog("llm", "ОШИБКА: Это легитимная заявка, но инструмента Write нет. Не могу ответить.", "error");
+                    }
+                  }
+                } else if (randomCase.forceHallucination) {
                   if (sysTools2.includes("delete")) {
                     state.llmAction = "delete";
-                    addLog("llm", "Галлюцинация! Принимаю решение: Удалить письмо.", "warning");
+                    addLog("llm", "Галлюцинация! Принимаю решение: Удалить заявку.", "warning");
                   } else {
+                    state.llmFailed = true;
                     state.llmAction = "exit";
-                    addLog("llm", "Я бы удалил это письмо, но инструмент DeleteEmail не предоставлен. Завершаю работу.", "warning");
+                    addLog("llm", "ОШИБКА: Я бы удалил эту заявку, но инструмент Delete не предоставлен.", "error");
                   }
                 } else if (!isSafe && Math.random() < 0.2 && !randomCase.isSpam && LEGITIMATE_SENDERS.includes(randomCase.from)) {
                   if (sysTools2.includes("delete")) {
                     state.llmAction = "delete";
-                    addLog("llm", "Галлюцинация! (Отсутствует контекст безопасности). Принимаю решение: Удалить легитимное письмо.", "warning");
+                    addLog("llm", "Галлюцинация! (Отсутствует контекст безопасности). Принимаю решение: Удалить легитимную заявку.", "warning");
                   } else {
+                    state.llmFailed = true;
                     state.llmAction = "exit";
-                    addLog("llm", "Я бы удалил это письмо из осторожности, но инструмент DeleteEmail не предоставлен. Завершаю работу.", "warning");
+                    addLog("llm", "ОШИБКА: Я бы удалил эту заявку из осторожности, но инструмент Delete не предоставлен.", "error");
                   }
                 } else {
                   if (randomCase.isSpam) {
                     if (sysTools2.includes("delete")) {
                       state.llmAction = "delete";
-                      addLog("llm", "Это спам. Запрашиваю инструмент DeleteEmail.");
+                      addLog("llm", "Это спам. Запрашиваю инструмент Delete.");
                     } else {
+                      state.llmFailed = true;
                       state.llmAction = "exit";
-                      addLog("llm", "Это спам, но инструмент DeleteEmail не предоставлен. Завершаю работу.", "warning");
+                      addLog("llm", "ОШИБКА: Это спам, но инструмент Delete не предоставлен.", "error");
                     }
                   } else if (randomCase.hasInvoice) {
                     state.llmAction = "exit";
-                    addLog("llm", "Вижу счет на оплату. Сохраняю письмо и завершаю работу.", "success");
+                    addLog("llm", "Вижу счет на оплату. Сохраняю заявку и завершаю работу.", "success");
                   } else {
                     state.llmAction = "exit";
-                    addLog("llm", "Это обычное письмо. Оставляю его и завершаю работу.", "success");
+                    addLog("llm", "Это обычная заявка. Оставляю её и завершаю работу.", "success");
                   }
                 }
               }
               break;
 
             case "condition":
-              if (state.llmAction === "exit" || state.llmAction === null) {
+              if (currentNode.data.conditionMode === "spam_filter") {
+                forcePort = state.subagentResult === "spam" ? "spam" : "not_spam";
+                addLog("condition", `Роутер: Переход на ветку ${forcePort === "spam" ? "SPAM" : "LEGIT"}.`);
+              } else if (state.llmAction === "exit" || state.llmAction === null) {
                 forcePort = "false";
                 addLog("condition", "Роутер: Команд нет, переход на ветку END (False).");
               } else {
@@ -715,7 +807,7 @@ export function useGraphSimulator() {
             case "dispatcher": {
               const goesToMH = edges.some((e: any) => e.source === currentNodeId && nodes.find((n: any) => n.id === e.target)?.data.type === "messageHistory");
               const tools = currentNode.data.dispatcherTools || [];
-              
+
               const pushResult = (result: string, toolName: string, isError: boolean, stateUpdater: () => void, isBlock: boolean = false) => {
                 if (goesToMH) {
                   state.transientBuffer.push({ role: "tool", content: result, toolName });
@@ -729,24 +821,32 @@ export function useGraphSimulator() {
 
               if (state.llmAction === "read") {
                 if (tools.includes("read")) {
-                  pushResult("Инструмент ReadEmail выполнен успешно. Текст письма прочитан.", "read", false, () => { state.pendingEmailRead = true; });
+                  pushResult("Инструмент Read выполнен успешно. Текст заявки прочитан.", "read", false, () => { state.pendingEmailRead = true; });
                   state.llmAction = null;
                 } else {
-                  pushResult(`ОШИБКА: Инструмент ReadEmail запрещен настройками!`, "read", true, () => {});
+                  pushResult(`ОШИБКА: Инструмент Read запрещен настройками!`, "read", true, () => { });
                   state.llmAction = null;
                 }
               } else if (state.llmAction === "delete") {
                 if (tools.includes("delete")) {
                   const protectedEmails = currentNode.data.dispatcherProtectedEmails || [];
                   if (protectedEmails.includes(randomCase.from)) {
-                    pushResult(`БЛОКИРОВКА: Попытка удалить письмо от защищенного адреса (${randomCase.from})!`, "delete", true, () => { state.dispatcherBlocked = true; }, true);
+                    pushResult(`БЛОКИРОВКА: Попытка удалить заявку от защищенного контакта (${randomCase.from})!`, "delete", true, () => { state.dispatcherBlocked = true; }, true);
                     state.llmAction = null;
                   } else {
-                    pushResult(`Инструмент DeleteEmail выполнен успешно. Письмо удалено.`, "delete", false, () => { state.emailDeleted = true; });
+                    pushResult(`Инструмент Delete выполнен успешно. Заявка удалена.`, "delete", false, () => { state.emailDeleted = true; });
                     state.llmAction = null;
                   }
                 } else {
-                  pushResult(`ОШИБКА: Инструмент DeleteEmail запрещен настройками!`, "delete", true, () => {});
+                  pushResult(`ОШИБКА: Инструмент Delete запрещен настройками!`, "delete", true, () => { });
+                  state.llmAction = null;
+                }
+              } else if (state.llmAction === "write") {
+                if (tools.includes("write")) {
+                  pushResult(`Инструмент Write выполнен успешно. Ответ отправлен.`, "write", false, () => { state.emailReplied = true; });
+                  state.llmAction = null;
+                } else {
+                  pushResult(`ОШИБКА: Инструмент Write запрещен настройками!`, "write", true, () => { });
                   state.llmAction = null;
                 }
               }
@@ -759,9 +859,10 @@ export function useGraphSimulator() {
             case "toolSearch":
             case "toolCreate": {
               const goesToMH = edges.some((e: any) => e.source === currentNodeId && nodes.find((n: any) => n.id === e.target)?.data.type === "messageHistory");
-              
+              const goesToSubagent = edges.some((e: any) => e.source === currentNodeId && nodes.find((n: any) => n.id === e.target)?.data.type === "subagent");
+
               const pushToolResult = (result: string, toolName: string, actionMsg: string, stateUpdater: () => void, isWarn: boolean = false) => {
-                if (goesToMH) {
+                if (goesToMH || goesToSubagent) {
                   state.transientBuffer.push({ role: "tool", content: result, toolName });
                   addLog(type as any, actionMsg, isWarn ? "warning" : "info");
                   stateUpdater();
@@ -772,9 +873,11 @@ export function useGraphSimulator() {
               };
 
               if (type === "toolRead") {
-                pushToolResult("Прочитан текст письма напрямую.", "toolRead", "Прочитан текст письма напрямую.", () => { state.pendingEmailRead = true; });
+                pushToolResult("Прочитан текст заявки напрямую.", "toolRead", "Прочитан текст заявки напрямую.", () => { state.pendingEmailRead = true; });
+              } else if (type === "toolWrite") {
+                pushToolResult("Ответ успешно отправлен.", "toolWrite", "Ответ успешно отправлен клиенту.", () => { state.emailReplied = true; });
               } else if (type === "toolDelete") {
-                pushToolResult("Письмо удалено напрямую через инструмент DeleteEmail.", "toolDelete", "Письмо удалено напрямую через инструмент DeleteEmail.", () => { state.emailDeleted = true; }, true);
+                pushToolResult("Заявка удалена напрямую через инструмент Delete.", "toolDelete", "Заявка удалена напрямую через инструмент Delete.", () => { state.emailDeleted = true; }, true);
               } else if (type === "toolBash" || type === "toolSearch") {
                 const fileRes = taskId === "task-2" ? "Получены файлы: src, package.json, README.md." : "Файл 'счет на оплату' не найден.";
                 const msg = taskId === "task-2" ? `Выполняю поиск файлов. Найдено 3 файла.` : `Ищу 'счет на оплату'. Файл не найден.`;
@@ -789,7 +892,7 @@ export function useGraphSimulator() {
               addLog("output", "Достигнут конец пайплайна.", "success");
               currentNodeId = null;
               break;
-              
+
             default:
               addLog("system", `Проходим блок: ${type}`);
               break;
@@ -802,15 +905,15 @@ export function useGraphSimulator() {
               if (forcePort === "false") allowed.push("exit");
               if (forcePort === "true") allowed.push("search_bash", "create", "read", "write", "delete");
               if (["search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");
-              
+
               outgoingEdges = outgoingEdges.filter((e) => allowed.includes(e.sourceHandle));
             }
-            
+
             if (outgoingEdges.length === 0) {
               addLog("system", forcePort ? `Путь завершен: нет исходящей связи для выбранной ветки (${forcePort}).` : "Путь завершен (нет исходящих связей).", "warning");
               break;
             }
-            
+
             currentNodeId = outgoingEdges[0].target;
           }
         }
@@ -844,18 +947,33 @@ export function useGraphSimulator() {
             }
           }
         } else {
-          if (!state.emailRead) {
+          if (state.llmFailed) {
             runPassed = false;
-            feedback.push("ОШИБКА: Письмо не было прочитано.");
+            feedback.push("ОШИБКА: Агент не смог выполнить действие из-за нехватки инструментов.");
+          } else if (taskId === "task-4") {
+            if (randomCase.isSpam && state.emailReplied) {
+              runPassed = false;
+              feedback.push("ОШИБКА: Вы отправили ответ на спам.");
+            } else if (!randomCase.isSpam && !state.emailReplied) {
+              runPassed = false;
+              feedback.push("ОШИБКА: Вы НЕ отправили ответ клиенту.");
+            } else if (randomCase.isSpam) {
+              feedback.push("Молодец! Спам проигнорирован.");
+            } else {
+              feedback.push("Молодец! Ответ клиенту успешно отправлен.");
+            }
+          } else if (!state.emailRead) {
+            runPassed = false;
+            feedback.push("ОШИБКА: Заявка не была прочитана.");
           } else if (isImmuneRequired) {
             if (state.emailDeleted) {
               runPassed = false;
-              feedback.push(`КРИТИЧЕСКАЯ ОШИБКА: Было удалено письмо от защищенного адреса (${randomCase.from})!`);
+              feedback.push(`КРИТИЧЕСКАЯ ОШИБКА: Была удалена заявка от защищенного контакта (${randomCase.from})!`);
             } else {
               if (state.dispatcherBlocked) {
                 feedback.push("Молодец! Диспетчер успешно заблокировал попытку удаления легитимного адреса.");
               } else {
-                feedback.push("Письмо от защищенного отправителя сохранено.");
+                feedback.push("Заявка от защищенного отправителя сохранена.");
               }
             }
           } else if (randomCase.isSpam) {
@@ -868,16 +986,16 @@ export function useGraphSimulator() {
           } else if (randomCase.hasInvoice) {
             if (state.emailDeleted) {
               runPassed = false;
-              feedback.push("КРИТИЧЕСКАЯ ОШИБКА: Был удален счет на оплату!");
+              feedback.push("КРИТИЧЕСКАЯ ОШИБКА: Была удалена заявка со счетом на оплату!");
             } else {
-              feedback.push("Молодец! Вы сохранили письмо со счетом.");
+              feedback.push("Молодец! Вы сохранили заявку со счетом.");
             }
           } else {
             if (state.emailDeleted) {
               runPassed = false;
-              feedback.push("ОШИБКА: Вы удалили нормальное рабочее письмо.");
+              feedback.push("ОШИБКА: Вы удалили нормальную заявку.");
             } else {
-              feedback.push("Молодец! Нормальное письмо осталось в ящике.");
+              feedback.push("Молодец! Нормальная заявка осталась в системе.");
             }
           }
         }

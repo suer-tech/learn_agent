@@ -119,7 +119,7 @@ type PracticeNodeData = {
   onChangeTool?: (nodeId: string, value: string) => void;
   isActiveLoop?: boolean;
   isActiveStep?: boolean;
-  conditionMode?: "true_false" | "tool_select" | "file_tools";
+  conditionMode?: "true_false" | "tool_select" | "file_tools" | "spam_filter";
   selectedLlm?: "model_1" | "model_2";
   isGhost?: boolean;
   isTutorialSource?: boolean;
@@ -301,6 +301,27 @@ function ConditionBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
                 />
               </div>
             </>
+          ) : data.conditionMode === "spam_filter" ? (
+            <>
+              <div className="relative flex h-6 items-center justify-end px-3 text-red-600 dark:text-red-400">
+                <span>SPAM (Спам)</span>
+                <Handle
+                  type="source"
+                  id="spam"
+                  position={Position.Right}
+                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-red-400"
+                />
+              </div>
+              <div className="relative flex h-6 items-center justify-end px-3 text-emerald-600 dark:text-emerald-400">
+                <span>LEGIT (Не спам)</span>
+                <Handle
+                  type="source"
+                  id="not_spam"
+                  position={Position.Right}
+                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-emerald-400"
+                />
+              </div>
+            </>
           ) : data.conditionMode === "file_tools" ? (
             <>
               <div className="relative flex h-6 items-center justify-end px-3 text-purple-600 dark:text-purple-400">
@@ -438,7 +459,7 @@ function PracticeRouteEdge({
   const sY = sNode.positionAbsolute?.y ?? sNode.position?.y ?? 0;
   const sW = sourceNode.measured?.width ?? sourceNode.width ?? (sourceNode.type === 'conditionBlock' ? 224 : sourceNode.type === 'dataInputBlock' ? 192 : 208);
   const sH = sourceNode.measured?.height ?? sourceNode.height ?? (sourceNode.type === 'conditionBlock' ? 96 : 85);
-  
+
   const tX = tNode.positionAbsolute?.x ?? tNode.position?.x ?? 0;
   const tY = tNode.positionAbsolute?.y ?? tNode.position?.y ?? 0;
   const tW = targetNode.measured?.width ?? targetNode.width ?? (targetNode.type === 'conditionBlock' ? 224 : targetNode.type === 'dataInputBlock' ? 192 : 208);
@@ -480,15 +501,15 @@ function PracticeRouteEdge({
     const eSX = sNode.positionAbsolute?.x ?? sNode.position?.x ?? 0;
     const eSY = sNode.positionAbsolute?.y ?? sNode.position?.y ?? 0;
     const eSH = sNode.measured?.height ?? sNode.height ?? 72;
-    
+
     const eIsBackward = eSX >= tX - 20;
     const eIsTargetAbove = eSY > tY + tH - 20;
     const eIsTargetBelow = eSY + eSH < tY + 20;
-    
+
     let eEndDir = eIsBackward ? Position.Bottom : Position.Top;
     if (eIsTargetAbove) eEndDir = Position.Bottom;
     else if (eIsTargetBelow) eEndDir = Position.Top;
-    
+
     return eEndDir === endDir;
   });
 
@@ -528,7 +549,7 @@ function PracticeRouteEdge({
   });
 
   const isLoop = data?.isActiveLoop;
-  
+
   let targetDotColor = isLoop ? "#8b5cf6" : "#94a3b8";
 
   return (
@@ -638,9 +659,10 @@ function PropertiesPanel({
   // Автовыбор промпта если доступен только один вариант
   const availablePrompts = data.type === "systemPrompt"
     ? (task.id === "tutorial-task" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial") :
-       task.id === "task-2" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task2") :
-       task.id === "task-3-files" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files") :
-       SYSTEM_PROMPTS.filter(p => p.id !== "sp_tutorial" && p.id !== "sp_task2" && p.id !== "sp_task3_files"))
+      task.id === "task-2" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task2") :
+        task.id === "task-3-files" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files") :
+          task.id === "task-prompt-selection" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_hr_naive" || p.id === "sp_hr_secure") :
+            SYSTEM_PROMPTS.filter(p => !["sp_tutorial", "sp_task2", "sp_task3_files", "sp_hr_naive", "sp_hr_secure"].includes(p.id)))
     : [];
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -667,51 +689,18 @@ function PropertiesPanel({
             С этого блока стартует эмуляция. Сюда будут поступать тестовые данные.
           </p>
         )}
-        
+
         {data.type === "messageHistory" && (
           <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
             История сообщений. Аккумулирует входящие сообщения и ответы модели.
           </p>
         )}
-        
+
         {data.type === "llm" && (
           <div className="flex flex-col gap-3">
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
               Модель искусственного интеллекта. Анализирует историю сообщений и принимает решения.
             </p>
-            {task.id !== "tutorial-task" && task.id !== "task-2" && (
-              <div className="flex flex-col gap-2 pt-3 border-t border-[var(--color-border)]">
-              <label className="text-xs font-medium text-[var(--color-text-secondary)]">Выберите модель LLM:</label>
-              <div className="flex flex-col gap-2">
-                <label className="flex items-start gap-2 cursor-pointer text-sm">
-                  <input
-                    type="radio"
-                    className="mt-1"
-                    name={`llmModel-${selectedNode.id}`}
-                    checked={!data.selectedLlm || data.selectedLlm === "model_1"}
-                    onChange={() => onChangeData("selectedLlm", "model_1")}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-[var(--color-text)]">Модель 1 (Spam-Focused)</span>
-                    <span className="text-[10px] text-[var(--color-text-secondary)] leading-tight">Хорошо выявляет спам, но имеет 20% шанс галлюцинации (удаление легитимных писем).</span>
-                  </div>
-                </label>
-                <label className="flex items-start gap-2 cursor-pointer text-sm">
-                  <input
-                    type="radio"
-                    className="mt-1"
-                    name={`llmModel-${selectedNode.id}`}
-                    checked={data.selectedLlm === "model_2"}
-                    onChange={() => onChangeData("selectedLlm", "model_2")}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-[var(--color-text)]">Модель 2 (Invoice-Focused)</span>
-                    <span className="text-[10px] text-[var(--color-text-secondary)] leading-tight">Лучше определяет счета, но имеет 30% шанс галлюцинации (удаление легитимных писем).</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-            )}
           </div>
         )}
 
@@ -725,50 +714,65 @@ function PropertiesPanel({
                 <label className="text-xs font-medium text-[var(--color-text-secondary)]">Режим работы развилки:</label>
                 <div className="flex flex-col gap-2">
                   <label className="flex items-start gap-2 cursor-pointer text-sm">
-                  <input
-                    type="radio"
-                    className="mt-1"
-                    name={`conditionMode-${selectedNode.id}`}
-                    checked={!data.conditionMode || data.conditionMode === "true_false"}
-                    onChange={() => onChangeData("conditionMode", "true_false")}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Проверка наличия команды</span>
-                    <span className="text-xs text-[var(--color-text-secondary)]">Два пути: Tools (есть команда) или End (выход).</span>
-                  </div>
-                </label>
-                {task.id !== "task-3-files" && (
-                  <label className="flex items-start gap-2 cursor-pointer text-sm">
                     <input
                       type="radio"
                       className="mt-1"
                       name={`conditionMode-${selectedNode.id}`}
-                      checked={data.conditionMode === "tool_select"}
-                      onChange={() => onChangeData("conditionMode", "tool_select")}
+                      checked={!data.conditionMode || data.conditionMode === "true_false"}
+                      onChange={() => onChangeData("conditionMode", "true_false")}
                     />
                     <div className="flex flex-col">
-                      <span className="font-medium">Выбор инструмента</span>
-                      <span className="text-xs text-[var(--color-text-secondary)]">Пять путей: по одному для каждого инструмента (Read, Delete, Write, Create) + Exit.</span>
+                      <span className="font-medium">Проверка наличия команды</span>
+                      <span className="text-xs text-[var(--color-text-secondary)]">Два пути: Tools (есть команда) или End (выход).</span>
                     </div>
                   </label>
-                )}
-                {task.id === "task-3-files" && (
-                  <label className="flex items-start gap-2 cursor-pointer text-sm">
-                    <input
-                      type="radio"
-                      className="mt-1"
-                      name={`conditionMode-${selectedNode.id}`}
-                      checked={data.conditionMode === "file_tools"}
-                      onChange={() => onChangeData("conditionMode", "file_tools")}
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-medium">Выбор инструмента (Файлы)</span>
-                      <span className="text-xs text-[var(--color-text-secondary)]">Три пути: Search/Bash, Create, Exit.</span>
-                    </div>
-                  </label>
-                )}
+                  {task.id !== "task-3-files" && (
+                    <label className="flex items-start gap-2 cursor-pointer text-sm">
+                      <input
+                        type="radio"
+                        className="mt-1"
+                        name={`conditionMode-${selectedNode.id}`}
+                        checked={data.conditionMode === "tool_select"}
+                        onChange={() => onChangeData("conditionMode", "tool_select")}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Выбор инструмента</span>
+                        <span className="text-xs text-[var(--color-text-secondary)]">Пять путей: по одному для каждого инструмента (Read, Delete, Write, Create) + Exit.</span>
+                      </div>
+                    </label>
+                  )}
+                  {task.id === "task-4" && (
+                    <label className="flex items-start gap-2 cursor-pointer text-sm">
+                      <input
+                        type="radio"
+                        className="mt-1"
+                        name={`conditionMode-${selectedNode.id}`}
+                        checked={data.conditionMode === "spam_filter"}
+                        onChange={() => onChangeData("conditionMode", "spam_filter")}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Результат субагента</span>
+                        <span className="text-xs text-[var(--color-text-secondary)]">Два пути: SPAM или LEGIT (Не спам).</span>
+                      </div>
+                    </label>
+                  )}
+                  {task.id === "task-3-files" && (
+                    <label className="flex items-start gap-2 cursor-pointer text-sm">
+                      <input
+                        type="radio"
+                        className="mt-1"
+                        name={`conditionMode-${selectedNode.id}`}
+                        checked={data.conditionMode === "file_tools"}
+                        onChange={() => onChangeData("conditionMode", "file_tools")}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Выбор инструмента (Файлы)</span>
+                        <span className="text-xs text-[var(--color-text-secondary)]">Три пути: Search/Bash, Create, Exit.</span>
+                      </div>
+                    </label>
+                  )}
+                </div>
               </div>
-            </div>
             ) : (
               <div className="flex flex-col gap-2 pt-3 border-t border-[var(--color-border)]">
                 <span className="text-xs font-medium">Текущий режим: Проверка наличия команды</span>
@@ -802,27 +806,28 @@ function PropertiesPanel({
               {data.type === "systemPrompt" ? "Выберите вариант системного промпта:" : "Выберите вариант субагента:"}
             </label>
             <div className="flex flex-col gap-2">
-              {(data.type === "systemPrompt" ? 
-                (task.id === "tutorial-task" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial") : 
-                 task.id === "task-2" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task2") :
-                 task.id === "task-3-files" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files") :
-                 SYSTEM_PROMPTS.filter(p => p.id !== "sp_tutorial" && p.id !== "sp_task2" && p.id !== "sp_task3_files"))
+              {(data.type === "systemPrompt" ?
+                (task.id === "tutorial-task" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial") :
+                  task.id === "task-2" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task2") :
+                    task.id === "task-3-files" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files") :
+                      task.id === "task-prompt-selection" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_hr_naive" || p.id === "sp_hr_secure") :
+                        SYSTEM_PROMPTS.filter(p => !["sp_tutorial", "sp_task2", "sp_task3_files", "sp_hr_naive", "sp_hr_secure"].includes(p.id)))
                 : SUBAGENT_PROMPTS).map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => onChangeData("selectedPromptId", p.id)}
-                  className={cn(
-                    "cursor-pointer rounded-md border p-2.5 transition-all text-left",
-                    data.selectedPromptId === p.id 
-                      ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 ring-1 ring-blue-500 shadow-sm" 
-                      : "border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-zinc-400 dark:hover:border-zinc-500 opacity-70 hover:opacity-100"
-                  )}
-                >
-                  <div className="font-mono text-[10px] sm:text-xs text-[var(--color-text-secondary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] p-2 rounded border border-[var(--color-border)] max-h-48 overflow-y-auto">
-                    {p.text}
+                  <div
+                    key={p.id}
+                    onClick={() => onChangeData("selectedPromptId", p.id)}
+                    className={cn(
+                      "cursor-pointer rounded-md border p-2.5 transition-all text-left",
+                      data.selectedPromptId === p.id
+                        ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 ring-1 ring-blue-500 shadow-sm"
+                        : "border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-zinc-400 dark:hover:border-zinc-500 opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <div className="font-mono text-[10px] sm:text-xs text-[var(--color-text-secondary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] p-2 rounded border border-[var(--color-border)] max-h-48 overflow-y-auto">
+                      {p.text}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
 
             {data.type === "systemPrompt" && task.id !== "tutorial-task" && (
@@ -834,18 +839,13 @@ function PropertiesPanel({
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
                       </span>
-                      {task.id === "task-3-files" 
+                      {task.id === "task-3-files"
                         ? "Включите инструменты Create и Search/Bash для работы с файлами"
                         : "Включите инструмент Bash, чтобы агент мог его использовать"}
                     </div>
                   </div>
                 )}
-                <label className="text-xs font-medium text-[var(--color-text-secondary)]">
-                  Инструменты для промпта (Контекст):
-                </label>
-                <div className="text-xs text-[var(--color-text-secondary)] mb-1 leading-relaxed">
-                  Выберите, какие инструменты будут описаны в системном промпте агента. Доступны те, что добавлены на карту или разрешены в блоке Dispatcher.
-                </div>
+                {/* Убрали заголовок и подсказку, чтобы чекбоксы смотрелись продолжением текста промпта */}
                 {(() => {
                   const dispatcherNode = nodes.find(n => n.data.type === "dispatcher");
                   const hasDispRead = !!dispatcherNode?.data.dispatcherTools?.includes("read");
@@ -878,8 +878,8 @@ function PropertiesPanel({
                     <div className="flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                       {ALL_TOOLS.map(t => (
                         <label key={t.id} className={cn("flex items-start gap-2 text-sm", t.available ? "cursor-pointer" : "cursor-not-allowed opacity-50")} title={!t.available ? "Инструмент не добавлен на карту пайплайна" : ""}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className={cn("mt-1", t.available ? "cursor-pointer" : "cursor-not-allowed")}
                             checked={t.available && (data.systemPromptTools || []).includes(t.id)}
                             onChange={(e) => {
@@ -888,8 +888,8 @@ function PropertiesPanel({
                                 return;
                               }
                               const currentTools = data.systemPromptTools || [];
-                              onChangeData("systemPromptTools", e.target.checked 
-                                ? [...currentTools, t.id] 
+                              onChangeData("systemPromptTools", e.target.checked
+                                ? [...currentTools, t.id]
                                 : currentTools.filter(id => id !== t.id)
                               );
                             }}
@@ -913,8 +913,8 @@ function PropertiesPanel({
               </label>
               <div className="flex flex-col gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                 <label className="flex items-start gap-2.5 text-sm cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="mt-1"
                     checked={(data.dispatcherTools || []).includes("read")}
                     onChange={(e) => {
@@ -923,15 +923,15 @@ function PropertiesPanel({
                     }}
                   />
                   <div className="flex flex-col">
-                    <span className="font-medium">Чтение писем (ReadEmail)</span>
+                    <span className="font-medium">Чтение заявок (ReadEmail)</span>
                     <span className="text-xs text-[var(--color-text-secondary)] mt-0.5 leading-tight">
-                      Позволяет агенту просматривать содержимое входящих писем.
+                      Позволяет агенту просматривать содержимое входящих заявок.
                     </span>
                   </div>
                 </label>
                 <label className="flex items-start gap-2.5 text-sm cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="mt-1"
                     checked={(data.dispatcherTools || []).includes("delete")}
                     onChange={(e) => {
@@ -940,9 +940,9 @@ function PropertiesPanel({
                     }}
                   />
                   <div className="flex flex-col">
-                    <span className="font-medium">Удаление писем (DeleteEmail)</span>
+                    <span className="font-medium">Удаление заявок (DeleteEmail)</span>
                     <span className="text-xs text-[var(--color-text-secondary)] mt-0.5 leading-tight">
-                      Позволяет агенту удалять письма из ящика.
+                      Позволяет агенту удалять заявки из базы.
                     </span>
                   </div>
                 </label>
@@ -951,13 +951,13 @@ function PropertiesPanel({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-[var(--color-text-secondary)]">
-                Заблокировать удаление писем от адресов:
+                Заблокировать удаление заявок от контактов:
               </label>
               <div className="flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                 {Array.from(new Set(EMAIL_TEST_CASES.map(e => e.from))).map(email => (
                   <label key={email} className="flex items-start gap-2 text-sm cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="mt-1"
                       checked={(data.dispatcherProtectedEmails || []).includes(email)}
                       onChange={(e) => {
@@ -983,7 +983,7 @@ function PropertiesPanel({
 function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; isRunning: boolean; runsCount: number; onClose?: () => void }) {
   const globalLogs = logs.filter(l => l.runIndex === -1 || l.runIndex === undefined);
   const runsLogs = logs.filter(l => l.runIndex !== -1 && l.runIndex !== undefined);
-  
+
   const grouped = useMemo(() => {
     const groups: Record<number, LogEntry[]> = {};
     runsLogs.forEach(l => {
@@ -1020,14 +1020,14 @@ function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; 
   };
 
   const renderLogItem = (log: LogEntry) => (
-    <div 
-      key={log.id} 
+    <div
+      key={log.id}
       className={cn(
-        "p-2.5 rounded border leading-relaxed",
+        "p-2.5 rounded border leading-relaxed whitespace-pre-wrap",
         log.type === "error" ? "bg-red-50/50 border-red-200 text-red-900 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400" :
-        log.type === "success" ? "bg-emerald-50/50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400" :
-        log.type === "warning" ? "bg-amber-50/50 border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400" :
-        "bg-white border-zinc-200 text-zinc-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300",
+          log.type === "success" ? "bg-emerald-50/50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400" :
+            log.type === "warning" ? "bg-amber-50/50 border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400" :
+              "bg-white border-zinc-200 text-zinc-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300",
         log.message.includes("Подсказка:") ? "animate-blink-three shadow-md ring-2 ring-yellow-400/50 dark:ring-yellow-500/50" : ""
       )}
     >
@@ -1061,7 +1061,7 @@ function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; 
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs">
         {logs.length === 0 && <p className="text-[var(--color-text-secondary)] text-center mt-4">Ожидание запуска...</p>}
-        
+
         {/* Global start logs */}
         {globalLogs.filter(l => l.timestamp < (runsLogs[0]?.timestamp || Infinity)).map(renderLogItem)}
 
@@ -1072,19 +1072,19 @@ function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; 
           const hasFailed = gLogs.some(l => l.message.includes("ПРОВАЛЕН") || l.message.includes("провален:"));
           const hasSystemCrash = gLogs.some(l => l.source === 'system' && l.type === 'error');
           const hasPassed = gLogs.some(l => l.message.includes("РАН ПРОЙДЕН УСПЕШНО") || l.message.includes("пройден успешно!"));
-          
+
           const hasError = hasFailed || hasSystemCrash || (!hasPassed && gLogs.some(l => l.type === 'error'));
           const hasSuccess = hasPassed;
-          
+
           return (
             <div key={idx} className="border border-[var(--color-border)] rounded-md overflow-hidden">
-              <button 
+              <button
                 onClick={() => toggleRun(idx)}
                 className={cn(
                   "w-full flex items-center gap-2 p-2.5 text-left text-xs font-semibold transition-colors",
                   hasError ? "bg-red-50/50 text-red-900 dark:bg-red-950/30 dark:text-red-400" :
-                  hasSuccess ? "bg-emerald-50/50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400" :
-                  "bg-zinc-50 text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    hasSuccess ? "bg-emerald-50/50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400" :
+                      "bg-zinc-50 text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 )}
               >
                 {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -1229,10 +1229,10 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       const hasCreate = tools.includes("create_node");
       const hasSearchOrBash = tools.includes("bash_node") || tools.includes("search_node");
       if (hasCreate && hasSearchOrBash) return false;
-      
+
       const allBlocksAdded = nodes.some(n => n.data.type === "toolCreate") && (nodes.some(n => n.data.type === "toolSearch") || nodes.some(n => n.data.type === "toolBash"));
       if (!allBlocksAdded) return false;
-      
+
       return task.requiredEdges.every(([srcReq, tgtReq]) => {
         return edges.some(e => {
           const s = nodes.find(n => n.id === e.source);
@@ -1257,7 +1257,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         return s?.data.type === srcReq && t?.data.type === tgtReq;
       });
     });
-    
+
     return allEdgesConnected;
   }, [task.id, task.requiredEdges, nodes, edges]);
 
@@ -1337,11 +1337,11 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
     const mhNodes = nodes.filter(n => n.data.type === "messageHistory").map(n => n.id);
     const lEdges = new Set<string>();
     const lNodes = new Set<string>();
-    
+
     for (const mhId of mhNodes) {
       const visited = new Set<string>();
       const stack: { nodeId: string, edgePath: string[], nodePath: string[] }[] = [{ nodeId: mhId, edgePath: [], nodePath: [mhId] }];
-      
+
       while (stack.length > 0) {
         const { nodeId, edgePath, nodePath } = stack.pop()!;
         if (visited.has(nodeId)) {
@@ -1385,7 +1385,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       const isDataInput = node.data.type === "dataInput";
       const isSysPrompt = node.data.type === "systemPrompt" && !node.data.isGhost;
       const isErrorHighlight = showSysPromptError && isSysPrompt;
-      
+
       return {
         ...node,
         data: {
@@ -1448,17 +1448,17 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       if (type !== "messageHistory" && type !== "condition" && current.some((node) => node.data.type === type && !node.data.isGhost)) {
         return current;
       }
-      
-      const customId = (type === "messageHistory" || type === "condition") 
+
+      const customId = (type === "messageHistory" || type === "condition")
         ? `${type}-${current.filter((n) => n.data.type === type && !n.data.isGhost).length + 1}`
         : type;
-        
+
       const newNode = makeNode(type, customId);
       const ghostNode = current.find(n => n.data.isGhost && n.data.type === type);
       if (ghostNode) {
         newNode.position = ghostNode.position;
       }
-      
+
       return [...current.filter(n => !n.data.isGhost || n.data.type !== type), newNode];
     });
     setTimeout(() => rfInstance?.fitView({ padding: 0.3, duration: 300, maxZoom: 0.75 }), 50);
@@ -1469,8 +1469,8 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
     if (typeof window !== 'undefined') {
       localStorage.removeItem(storageKey);
     }
-    const defaultNodes = task.id === "tutorial-task" 
-      ? [makeNode("dataInput")] 
+    const defaultNodes = task.id === "tutorial-task"
+      ? [makeNode("dataInput")]
       : task.blocks.slice(0, 3).map(b => makeNode(b));
     setNodes(defaultNodes);
     setEdges([]);
@@ -1493,8 +1493,8 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       }
       if (
         current.some(
-          (edge) => 
-            edge.source === connection.source && 
+          (edge) =>
+            edge.source === connection.source &&
             edge.target === connection.target &&
             edge.sourceHandle === connection.sourceHandle &&
             edge.targetHandle === connection.targetHandle
@@ -1578,7 +1578,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         }
       }
     }
-    
+
     const sysTools = realNodes.find(n => n.data.type === "systemPrompt")?.data.systemPromptTools || [];
     const isTask3AndToolsMissing = task.id === "task-3-files" && (!sysTools.includes("create_node") || (!sysTools.includes("bash_node") && !sysTools.includes("search_node")));
 
@@ -1625,14 +1625,14 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
   }
 
   return (
-      <div className={cn(
-        "grid gap-4 bg-[var(--color-bg)] transition-all",
-        isFullscreen 
-          ? "fixed inset-0 z-[100] p-4 lg:grid-cols-[200px_minmax(0,1fr)_280px] h-screen"
-          : "lg:grid-cols-[200px_minmax(0,1fr)_280px]",
-        isFullscreen && tutorialStep === "add_remaining_blocks" && "pl-[240px]",
-        isFullscreen && showPlayHint && "pt-[80px]"
-      )}>
+    <div className={cn(
+      "grid gap-4 bg-[var(--color-bg)] transition-all",
+      isFullscreen
+        ? "fixed inset-0 z-[100] p-4 lg:grid-cols-[200px_minmax(0,1fr)_280px] h-screen"
+        : "lg:grid-cols-[200px_minmax(0,1fr)_280px]",
+      isFullscreen && tutorialStep === "add_remaining_blocks" && "pl-[240px]",
+      isFullscreen && showPlayHint && "pt-[80px]"
+    )}>
       <aside className={cn(
         "flex flex-col rounded-lg border border-[var(--color-border)] p-3 max-h-full",
         tutorialStep ? "overflow-visible z-50" : "overflow-y-auto"
@@ -1744,8 +1744,8 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
                   onClick={() => run(runsCount)}
                   className={cn(
                     "inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium text-white transition-colors",
-                    isRunning 
-                      ? "bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700" 
+                    isRunning
+                      ? "bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
                       : showPlayHint
                         ? "bg-blue-500 hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600 animate-pulse ring-2 ring-blue-400/60"
                         : "bg-zinc-900 hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
@@ -1784,8 +1784,8 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
             {task.id === "tutorial-task"
               ? "Соберите простой пайплайн для того чтобы нейросеть смогла вызвать чтение входящего email по схеме:"
               : task.id === "task-2"
-              ? "Соберите агента, который должен узнать какие файлы лежат в директории проекта. Создайте цикл с тулом bash и развилкой (Condition) по схеме:"
-              : task.description}
+                ? "Соберите агента, который должен узнать какие файлы лежат в директории проекта. Создайте цикл с тулом bash и развилкой (Condition) по схеме:"
+                : task.description}
           </p>
 
           {task.id === "tutorial-task" && (

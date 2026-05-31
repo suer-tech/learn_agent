@@ -1,51 +1,57 @@
 {
   "version": "s04",
   "title": "Подагенты",
-  "description": "Агент порождает подагента для изолированного выполнения подзадачи",
+  "description": "Агент порождает подагента для поиска данных в документах без засорения своего контекста",
   "steps": [
     {
       "type": "user_message",
-      "content": "Отрефактори калькулятор: разбей на модули и добавь тесты",
-      "annotation": "Сложная задача, подходящая для делегирования"
+      "content": "Найди имя пользователя в документах в папке /data",
+      "annotation": "Задача требует чтения множества файлов — идеальный кандидат для делегирования"
     },
     {
       "type": "assistant_text",
-      "content": "Я делегирую написание тестов подагенту, а сам займусь рефакторингом.",
-      "annotation": "Агент решает разделить работу с помощью инструмента Task"
+      "content": "Я делегирую поиск подагенту, чтобы не забивать свой контекст содержимым всех файлов.",
+      "annotation": "Агент решает делегировать: 50 файлов = тысячи токенов мусора в его контексте"
     },
     {
       "type": "tool_call",
-      "content": "Write unit tests for calc.py covering all 4 operations and edge cases like division by zero",
+      "content": "Открой все файлы в /data и найди имя пользователя. Верни только найденное имя.",
       "toolName": "task",
       "annotation": "Инструмент Task порождает подагента с собственным изолированным контекстом"
     },
     {
       "type": "system_event",
-      "content": "[Subagent spawned] Context: fresh messages[], same tools, scoped prompt",
-      "annotation": "Подагент получает чистый контекст -- нет путаницы из-за разговора родителя"
-    },
-    {
-      "type": "tool_result",
-      "content": "Created test_calc.py with 8 test cases. All passing.",
-      "toolName": "task",
-      "annotation": "Подагент завершает работу и возвращает сводку родителю"
+      "content": "[Subagent spawned] Context: fresh messages[], tools: read_file, bash",
+      "annotation": "Подагент получает чистый контекст — он не видит историю родителя"
     },
     {
       "type": "tool_call",
-      "content": "calc.py -> calc/operations.py, calc/cli.py",
-      "toolName": "write_file",
-      "annotation": "Родитель продолжает свою задачу: рефакторинг"
+      "content": "read_file(\"/data/doc1.txt\") → 'Отчёт за январь...'",
+      "toolName": "read_file",
+      "annotation": "Подагент читает первый документ — имени нет, идёт дальше"
+    },
+    {
+      "type": "tool_call",
+      "content": "read_file(\"/data/doc2.txt\") → 'Протокол совещания...'",
+      "toolName": "read_file",
+      "annotation": "Второй документ — тоже мимо, контекст подагента растёт"
+    },
+    {
+      "type": "tool_call",
+      "content": "read_file(\"/data/doc3.txt\") → '...пользователь: admin_vasya...'",
+      "toolName": "read_file",
+      "annotation": "Третий документ — имя найдено!"
     },
     {
       "type": "tool_result",
-      "content": "Files written successfully",
-      "toolName": "write_file",
-      "annotation": "Модули разделены"
+      "content": "Имя пользователя: admin_vasya (найдено в /data/doc3.txt)",
+      "toolName": "task",
+      "annotation": "Подагент возвращает только результат. 3 прочитанных файла остались в ЕГО контексте, не в родительском"
     },
     {
       "type": "assistant_text",
-      "content": "Рефакторинг сделан: calc/operations.py и calc/cli.py. Тесты написаны подагентом и все проходят.",
-      "annotation": "Изоляция контекста предотвращает путаницу между задачами"
+      "content": "Имя пользователя — admin_vasya. Найдено в документе /data/doc3.txt.",
+      "annotation": "Родитель получил чистый ответ: 1 строка вместо содержимого 3 файлов. Контекст остался чистым."
     }
   ]
 }
