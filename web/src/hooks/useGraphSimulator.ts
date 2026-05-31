@@ -611,7 +611,7 @@ export function useGraphSimulator() {
             }
           }
 
-          let forcePort: "true" | "false" | null = null;
+          let forcePort: string | null = null;
 
           switch (type) {
             case "dataInput":
@@ -905,6 +905,8 @@ export function useGraphSimulator() {
               if (forcePort === "false") allowed.push("exit");
               if (forcePort === "true") allowed.push("search_bash", "create", "read", "write", "delete");
               if (["search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");
+              if (forcePort === "spam") allowed.push("spam");
+              if (forcePort === "not_spam") allowed.push("not_spam");
 
               outgoingEdges = outgoingEdges.filter((e) => allowed.includes(e.sourceHandle));
             }
