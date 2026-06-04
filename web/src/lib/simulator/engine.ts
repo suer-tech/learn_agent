@@ -558,11 +558,8 @@ export async function runSimulationEngine(
         if (forcePort) {
           const allowed = [forcePort];
           if (forcePort === "false") allowed.push("exit");
-          if (forcePort === "true") allowed.push("search_bash", "create", "read", "write", "delete");
-          if (["search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");
-          if (forcePort === "search_bash" && currentNode?.data?.conditionMode === "file_tools") {
-            allowed.push("search", "bash");
-          }
+          if (forcePort === "true") allowed.push("search", "bash", "search_bash", "create", "read", "write", "delete");
+          if (["search", "bash", "search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");
 
           outEdges = outEdges.filter((e: any) => allowed.includes(e.sourceHandle));
         }
@@ -1228,8 +1225,8 @@ export async function runSimulationEngine(
         if (forcePort) {
           const allowed: string[] = [forcePort];
           if (forcePort === "false") allowed.push("exit", "subagent");
-          if (forcePort === "true") allowed.push("search_bash", "create", "read", "write", "delete", "subagent");
-          if (["search_bash", "create", "read", "write", "delete", "subagent"].includes(forcePort)) allowed.push("true");
+          if (forcePort === "true") allowed.push("search", "bash", "search_bash", "create", "read", "write", "delete", "subagent");
+          if (["search", "bash", "search_bash", "create", "read", "write", "delete", "subagent"].includes(forcePort)) allowed.push("true");
           if (forcePort === "subagent") allowed.push("false");
           if (forcePort === "spam") allowed.push("spam");
           if (forcePort === "not_spam") allowed.push("not_spam");
