@@ -559,6 +559,7 @@ export async function runSimulationEngine(
           const allowed = [forcePort];
           if (forcePort === "false") allowed.push("exit");
           if (forcePort === "true") allowed.push("search", "bash", "search_bash", "create", "read", "write", "delete");
+          if (forcePort === "search_bash") allowed.push("search", "bash");
           if (["search", "bash", "search_bash", "create", "read", "write", "delete"].includes(forcePort)) allowed.push("true");
 
           outEdges = outEdges.filter((e: any) => allowed.includes(e.sourceHandle));
@@ -1226,6 +1227,7 @@ export async function runSimulationEngine(
           const allowed: string[] = [forcePort];
           if (forcePort === "false") allowed.push("exit", "subagent");
           if (forcePort === "true") allowed.push("search", "bash", "search_bash", "create", "read", "write", "delete", "subagent");
+          if (forcePort === "search_bash") allowed.push("search", "bash");
           if (["search", "bash", "search_bash", "create", "read", "write", "delete", "subagent"].includes(forcePort)) allowed.push("true");
           if (forcePort === "subagent") allowed.push("false");
           if (forcePort === "spam") allowed.push("spam");
