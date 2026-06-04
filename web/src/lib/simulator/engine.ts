@@ -500,7 +500,8 @@ export async function runSimulationEngine(
         // --- Condition ---
         case "condition":
           forcePort = mem.llmAction || "false";
-          addLog("condition", forcePort === "false" ? "Роутер: Нет активной команды → конец (False)." : `Роутер: Переход на ветку ${forcePort}.`, "info", 0);
+          const branchLabel = (a: string) => a === "false" || a === "exit" ? "EXIT" : a === "search_bash" ? "SEARCH/BASH" : a.toUpperCase();
+          addLog("condition", forcePort === "false" ? "Роутер: Нет активной команды → EXIT." : `Роутер: Переход на ветку ${branchLabel(forcePort)}.`, "info", 0);
           break;
 
         // --- Tools ---
@@ -1047,7 +1048,7 @@ export async function runSimulationEngine(
           } else if (currentNode.data?.conditionMode === "tool_select") {
             if (state.llmAction === "exit" || state.llmAction === null) {
               forcePort = "false";
-              addLog("condition", "Роутер: Команд нет, переход на ветку END (False).", "info", runIndex);
+              addLog("condition", "Роутер: Команд нет, переход на ветку EXIT.", "info", runIndex);
             } else {
               forcePort = state.llmAction;
               addLog("condition", `Роутер: Выбран инструмент ${state.llmAction?.toUpperCase() ?? "?"}.`, "info", runIndex);
@@ -1057,10 +1058,11 @@ export async function runSimulationEngine(
             addLog("condition", "Роутер: Выбран инструмент Subagent.", "info", runIndex);
           } else if (state.llmAction === "exit" || state.llmAction === null) {
             forcePort = "false";
-            addLog("condition", "Роутер: Команд нет, переход на ветку END (False).", "info", runIndex);
+            addLog("condition", "Роутер: Команд нет, переход на ветку EXIT.", "info", runIndex);
           } else {
             forcePort = "true";
-            addLog("condition", "Роутер: Есть команда, переход на ветку TOOLS (True).", "info", runIndex);
+            const toolLabel = state.llmAction?.toUpperCase() ?? "?";
+            addLog("condition", `Роутер: Есть команда, переход на ветку ${toolLabel}.`, "info", runIndex);
           }
           break;
 
