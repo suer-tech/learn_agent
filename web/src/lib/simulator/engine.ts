@@ -500,8 +500,6 @@ export async function runSimulationEngine(
         // --- Condition ---
         case "condition":
           forcePort = mem.llmAction || "false";
-          const branchLabel = (a: string) => a === "false" || a === "exit" ? "EXIT" : a === "search_bash" ? "SEARCH/BASH" : a.toUpperCase();
-          addLog("condition", forcePort === "false" ? "Роутер: Нет активной команды → EXIT." : `Роутер: Переход на ветку ${branchLabel(forcePort)}.`, "info", 0);
           break;
 
         // --- Tools ---
@@ -570,6 +568,7 @@ export async function runSimulationEngine(
             const outputNode = nodes.find(n => n.data?.type === "output");
             if (outputNode) {
               currentNodeId = outputNode.id;
+              if (ntype === "condition") addLog("condition", "Роутер: Нет активной команды → EXIT.", "info", 0);
               continue;
             }
           }
@@ -577,6 +576,11 @@ export async function runSimulationEngine(
           break;
         }
         currentNodeId = outEdges[0].target;
+        if (ntype === "condition") {
+          const h = outEdges[0].sourceHandle;
+          const label = h === "false" || h === "exit" ? "EXIT" : h === "not_spam" ? "LEGIT" : h.toUpperCase();
+          addLog("condition", `Роутер: Переход на ветку ${label}.`, "info", 0);
+        }
       }
     }
 
