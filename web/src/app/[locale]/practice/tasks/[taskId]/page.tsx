@@ -27,7 +27,7 @@ export default async function PracticeTaskPage({
         <ArrowLeft size={16} />
         К списку задач
       </Link>
-      <PracticeTrainer task={task} allTasks={allTasks} />
+      <PracticeTrainer key={task.id} task={task} allTasks={allTasks} />
     </div>
   );
 }

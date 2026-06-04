@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle2, Circle, Clock, Trophy } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Trophy, Activity } from "lucide-react";
 import { getCurrentUsername, getProgressForUser, getTasks } from "@/lib/practice/server-store";
 import { Card } from "@/components/ui/card";
 import type { PracticeProgressStatus } from "@/types/practice";
@@ -37,9 +37,18 @@ export default async function PracticePage() {
             архитектуре агентного цикла.
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">
-          <Trophy size={16} className="text-amber-500" />
-          {passed} / {tasks.length} задач пройдено
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/ru/practice/tests`}
+            className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-zinc-800/20 hover:border-zinc-400 dark:hover:bg-zinc-800/30 transition-all duration-300"
+          >
+            <Activity size={16} className="text-indigo-400" />
+            Регрессионные тесты
+          </Link>
+          <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">
+            <Trophy size={16} className="text-amber-500" />
+            {passed} / {tasks.length} задач пройдено
+          </div>
         </div>
       </header>
 
@@ -61,7 +70,7 @@ export default async function PracticePage() {
                 </div>
                 <h2 className="mt-4 text-base font-semibold group-hover:underline">{task.title}</h2>
                 <p className="mt-2 line-clamp-3 text-sm text-[var(--color-text-secondary)]">
-                  {task.description}
+                  {task.description?.split('\n').map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}
                 </p>
               </Card>
             </Link>

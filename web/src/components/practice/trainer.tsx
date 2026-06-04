@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Background,
@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { SYSTEM_PROMPTS, SUBAGENT_PROMPTS } from "@/lib/simulator/prompts";
 import { useGraphSimulator, type LogEntry } from "@/hooks/useGraphSimulator";
 import { EMAIL_TEST_CASES } from "@/lib/simulator/emails";
+import { isEmailMatch } from "@/lib/simulator/engine";
 
 
 
@@ -40,7 +41,7 @@ const BLOCK_LABELS: Record<PracticeBlockType, string> = {
   dataInput: "Data Input (Start)",
   messageHistory: "Message History",
   systemPrompt: "System Prompt",
-  subagent: "Sub-agent",
+  subagent: "Task/Subagent",
   llm: "LLM",
   toolRead: "Tool: Read",
   toolWrite: "Tool: Write",
@@ -51,6 +52,7 @@ const BLOCK_LABELS: Record<PracticeBlockType, string> = {
   condition: "Condition / Router",
   dispatcher: "Dispatcher / Sandbox",
   output: "Output / Final Answer",
+  knowledgeBase: "База знаний",
 };
 
 const BLOCK_HINTS: Record<PracticeBlockType, string> = {
@@ -68,6 +70,7 @@ const BLOCK_HINTS: Record<PracticeBlockType, string> = {
   condition: "branch",
   dispatcher: "Доступ к API",
   output: "final outside",
+  knowledgeBase: "база знаний",
 };
 
 const BLOCK_ACCENTS: Record<PracticeBlockType, string> = {
@@ -85,6 +88,7 @@ const BLOCK_ACCENTS: Record<PracticeBlockType, string> = {
   condition: "bg-fuchsia-500",
   dispatcher: "bg-cyan-500",
   output: "bg-rose-500",
+  knowledgeBase: "bg-amber-500",
 };
 
 const INITIAL_POSITIONS: Record<PracticeBlockType, { x: number; y: number }> = {
@@ -102,6 +106,7 @@ const INITIAL_POSITIONS: Record<PracticeBlockType, { x: number; y: number }> = {
   output: { x: 930, y: 250 },
   toolBash: { x: 650, y: 350 },
   toolSearch: { x: 650, y: 150 },
+  knowledgeBase: { x: 800, y: 50 },
 };
 
 type PracticeNodeData = {
@@ -125,6 +130,7 @@ type PracticeNodeData = {
   isTutorialSource?: boolean;
   isTutorialTarget?: boolean;
   isErrorHighlight?: boolean;
+  taskBlocks?: string[];
 };
 
 type PracticeEdgeData = {
@@ -253,55 +259,7 @@ function ConditionBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
           IN
         </div>
         <div className="flex flex-1 flex-col py-1 font-mono text-[10px] font-medium">
-          {data.conditionMode === "tool_select" ? (
-            <>
-              <div className="relative flex h-6 items-center justify-end px-3 text-cyan-600 dark:text-cyan-400">
-                <span>READ</span>
-                <Handle
-                  type="source"
-                  id="read"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-cyan-400"
-                />
-              </div>
-              <div className="relative flex h-6 items-center justify-end px-3 text-red-600 dark:text-red-400">
-                <span>DELETE</span>
-                <Handle
-                  type="source"
-                  id="delete"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-red-400"
-                />
-              </div>
-              <div className="relative flex h-6 items-center justify-end px-3 text-blue-600 dark:text-blue-400">
-                <span>WRITE</span>
-                <Handle
-                  type="source"
-                  id="write"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-blue-400"
-                />
-              </div>
-              <div className="relative flex h-6 items-center justify-end px-3 text-emerald-600 dark:text-emerald-400">
-                <span>CREATE</span>
-                <Handle
-                  type="source"
-                  id="create"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-emerald-400"
-                />
-              </div>
-              <div className="relative flex h-6 items-center justify-end px-3 text-orange-600 dark:text-orange-400">
-                <span>EXIT (False)</span>
-                <Handle
-                  type="source"
-                  id="false"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-orange-400"
-                />
-              </div>
-            </>
-          ) : data.conditionMode === "spam_filter" ? (
+          {data.conditionMode === "spam_filter" ? (
             <>
               <div className="relative flex h-6 items-center justify-end px-3 text-red-600 dark:text-red-400">
                 <span>SPAM (Спам)</span>
@@ -322,49 +280,87 @@ function ConditionBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
                 />
               </div>
             </>
-          ) : data.conditionMode === "file_tools" ? (
-            <>
-              <div className="relative flex h-6 items-center justify-end px-3 text-purple-600 dark:text-purple-400">
-                <span>SEARCH/BASH</span>
-                <Handle
-                  type="source"
-                  id="search_bash"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-purple-400"
-                />
-              </div>
-              <div className="relative flex h-6 items-center justify-end px-3 text-emerald-600 dark:text-emerald-400">
-                <span>CREATE</span>
-                <Handle
-                  type="source"
-                  id="create"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-emerald-400"
-                />
-              </div>
-              <div className="relative flex h-6 items-center justify-end px-3 text-orange-600 dark:text-orange-400">
-                <span>EXIT (False)</span>
-                <Handle
-                  type="source"
-                  id="false"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-orange-400"
-                />
-              </div>
-            </>
           ) : (
             <>
-              <div className="relative flex h-6 items-center justify-end px-3 text-emerald-600 dark:text-emerald-400">
-                <span>TOOLS (True)</span>
-                <Handle
-                  type="source"
-                  id="true"
-                  position={Position.Right}
-                  className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-emerald-400"
-                />
-              </div>
+              {(!data.taskBlocks || data.taskBlocks.includes("toolSearch")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-amber-600 dark:text-amber-400">
+                  <span>SEARCH</span>
+                  <Handle
+                    type="source"
+                    id="search"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-amber-400"
+                  />
+                </div>
+              )}
+              {(!data.taskBlocks || data.taskBlocks.includes("toolBash")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-purple-600 dark:text-purple-400">
+                  <span>BASH</span>
+                  <Handle
+                    type="source"
+                    id="bash"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-purple-400"
+                  />
+                </div>
+              )}
+              {(!data.taskBlocks || data.taskBlocks.includes("toolRead")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-cyan-600 dark:text-cyan-400">
+                  <span>READ</span>
+                  <Handle
+                    type="source"
+                    id="read"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-cyan-400"
+                  />
+                </div>
+              )}
+              {(!data.taskBlocks || data.taskBlocks.includes("toolDelete")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-red-600 dark:text-red-400">
+                  <span>DELETE</span>
+                  <Handle
+                    type="source"
+                    id="delete"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-red-400"
+                  />
+                </div>
+              )}
+              {(!data.taskBlocks || data.taskBlocks.includes("toolWrite")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-blue-600 dark:text-blue-400">
+                  <span>WRITE</span>
+                  <Handle
+                    type="source"
+                    id="write"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-blue-400"
+                  />
+                </div>
+              )}
+              {(!data.taskBlocks || data.taskBlocks.includes("toolCreate")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-emerald-600 dark:text-emerald-400">
+                  <span>CREATE</span>
+                  <Handle
+                    type="source"
+                    id="create"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-emerald-400"
+                  />
+                </div>
+              )}
+              {(!data.taskBlocks || data.taskBlocks.includes("subagent")) && (
+                <div className="relative flex h-6 items-center justify-end px-3 text-purple-600 dark:text-purple-400">
+                  <span>SUBAGENT</span>
+                  <Handle
+                    type="source"
+                    id="subagent"
+                    position={Position.Right}
+                    className="!right-[-6px] !top-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900 transition-colors hover:!border-purple-400"
+                  />
+                </div>
+              )}
               <div className="relative flex h-6 items-center justify-end px-3 text-red-600 dark:text-red-400">
-                <span>END (False)</span>
+                <span>EXIT</span>
                 <Handle
                   type="source"
                   id="false"
@@ -537,6 +533,7 @@ function PracticeRouteEdge({
   let pathEndY = endY;
   if (endDir === Position.Top) pathEndY -= 6;
   else if (endDir === Position.Bottom) pathEndY += 6;
+  else if (endDir === Position.Left) pathEndX -= 6;
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX: startX,
@@ -646,35 +643,68 @@ function PropertiesPanel({
   task: PracticeTask;
   showSysPromptError?: boolean;
 }) {
-  if (!selectedNode) {
-    return (
-      <aside className="rounded-lg border border-[var(--color-border)] p-4 text-center text-sm text-[var(--color-text-secondary)]">
-        Выберите блок на карте для настройки
-      </aside>
-    );
-  }
-
-  const { data } = selectedNode;
+  const data = selectedNode?.data;
 
   // Автовыбор промпта если доступен только один вариант
-  const availablePrompts = data.type === "systemPrompt"
-    ? (task.id === "tutorial-task" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial") :
-      task.id === "task-2" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task2") :
-        task.id === "task-3-files" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files") :
-          task.id === "task-prompt-selection" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_hr_naive" || p.id === "sp_hr_secure") :
-            SYSTEM_PROMPTS.filter(p => !["sp_tutorial", "sp_task2", "sp_task3_files", "sp_hr_naive", "sp_hr_secure"].includes(p.id)))
-    : [];
+  const availablePrompts = useMemo(() => {
+    if (!data) return [];
+    if (data.type === "systemPrompt") {
+      if (task.id === "tutorial-task") return SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial");
+      if (task.id === "task-2") return SYSTEM_PROMPTS.filter(p => p.id === "sp_task2");
+      if (task.id === "task-3") return SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files");
+      if (task.id === "task-4") return SYSTEM_PROMPTS.filter(p => p.id === "sp_hr_naive" || p.id === "sp_hr_secure");
+      if (task.id === "task-7") return SYSTEM_PROMPTS.filter(p => p.id === "sp_router" || p.id === "sp_support_basic");
+      return SYSTEM_PROMPTS.filter(p => !["sp_tutorial", "sp_task2", "sp_task3_files", "sp_hr_naive", "sp_hr_secure", "sp_router", "sp_support_basic"].includes(p.id));
+    }
+    if (data.type === "subagent") {
+      if (task.id === "task-7") return SUBAGENT_PROMPTS.filter(p => p.id === "sub_financial_manager" || p.id === "sub_summarizer");
+      return SUBAGENT_PROMPTS;
+    }
+    return [];
+  }, [data?.type, task.id]);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const taskToolsStr = useMemo(() => {
+    const list: string[] = [];
+    if (task.blocks.includes("toolRead")) list.push("Read");
+    if (task.blocks.includes("toolDelete")) list.push("Delete");
+    if (task.blocks.includes("toolWrite")) list.push("Write");
+    if (task.blocks.includes("toolCreate")) list.push("Create");
+    if (task.blocks.includes("toolSearch")) list.push("Search");
+    if (task.blocks.includes("subagent")) list.push("Subagent");
+    return list.join(", ");
+  }, [task.blocks]);
+
+  const taskBranchStr = useMemo(() => {
+    const list: string[] = [];
+    if (task.blocks.includes("toolSearch")) list.push("Search");
+    if (task.blocks.includes("toolBash")) list.push("Bash");
+    if (task.blocks.includes("toolRead")) list.push("Read");
+    if (task.blocks.includes("toolDelete")) list.push("Delete");
+    if (task.blocks.includes("toolWrite")) list.push("Write");
+    if (task.blocks.includes("toolCreate")) list.push("Create");
+    if (task.blocks.includes("subagent")) list.push("Subagent");
+    list.push("Exit");
+    return list.join(", ");
+  }, [task.blocks]);
+
   useEffect(() => {
     if (
+      data &&
       data.type === "systemPrompt" &&
       availablePrompts.length === 1 &&
       data.selectedPromptId !== availablePrompts[0].id
     ) {
       onChangeData("selectedPromptId", availablePrompts[0].id);
     }
-  }, [selectedNode.id, availablePrompts.length]);
+  }, [selectedNode?.id, availablePrompts.length, data, onChangeData]);
+
+  if (!selectedNode || !data) {
+    return (
+      <aside className="rounded-lg border border-[var(--color-border)] p-4 text-center text-sm text-[var(--color-text-secondary)]">
+        Выберите блок на карте для настройки
+      </aside>
+    );
+  }
 
   return (
     <aside className="flex flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 shadow-sm overflow-y-auto max-h-full">
@@ -709,7 +739,13 @@ function PropertiesPanel({
             <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
               Блок развилки. Позволяет перенаправлять выполнение агента по разным веткам в зависимости от режима работы.
             </p>
-            {task.id !== "task-2" ? (
+            {["task-3", "task-4", "task-5", "task-6", "task-7"].includes(task.id) ? (
+              <div className="flex flex-col gap-1 pt-3 border-t border-[var(--color-border)]">
+                <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+                  Ветки: {taskBranchStr}
+                </span>
+              </div>
+            ) : task.id !== "task-2" ? (
               <div className="flex flex-col gap-2 pt-3 border-t border-[var(--color-border)]">
                 <label className="text-xs font-medium text-[var(--color-text-secondary)]">Режим работы развилки:</label>
                 <div className="flex flex-col gap-2">
@@ -726,22 +762,7 @@ function PropertiesPanel({
                       <span className="text-xs text-[var(--color-text-secondary)]">Два пути: Tools (есть команда) или End (выход).</span>
                     </div>
                   </label>
-                  {task.id !== "task-3-files" && (
-                    <label className="flex items-start gap-2 cursor-pointer text-sm">
-                      <input
-                        type="radio"
-                        className="mt-1"
-                        name={`conditionMode-${selectedNode.id}`}
-                        checked={data.conditionMode === "tool_select"}
-                        onChange={() => onChangeData("conditionMode", "tool_select")}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium">Выбор инструмента</span>
-                        <span className="text-xs text-[var(--color-text-secondary)]">Пять путей: по одному для каждого инструмента (Read, Delete, Write, Create) + Exit.</span>
-                      </div>
-                    </label>
-                  )}
-                  {task.id === "task-4" && (
+                  {task.id === "task-6" && (
                     <label className="flex items-start gap-2 cursor-pointer text-sm">
                       <input
                         type="radio"
@@ -756,27 +777,13 @@ function PropertiesPanel({
                       </div>
                     </label>
                   )}
-                  {task.id === "task-3-files" && (
-                    <label className="flex items-start gap-2 cursor-pointer text-sm">
-                      <input
-                        type="radio"
-                        className="mt-1"
-                        name={`conditionMode-${selectedNode.id}`}
-                        checked={data.conditionMode === "file_tools"}
-                        onChange={() => onChangeData("conditionMode", "file_tools")}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium">Выбор инструмента (Файлы)</span>
-                        <span className="text-xs text-[var(--color-text-secondary)]">Три пути: Search/Bash, Create, Exit.</span>
-                      </div>
-                    </label>
-                  )}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-2 pt-3 border-t border-[var(--color-border)]">
-                <span className="text-xs font-medium">Текущий режим: Проверка наличия команды</span>
-                <span className="text-[10px] text-[var(--color-text-secondary)] leading-tight">Два пути: Tools (есть команда) или End (выход).</span>
+              <div className="flex flex-col gap-1 pt-3 border-t border-[var(--color-border)]">
+                <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+                  Ветки: Bash, Exit
+                </span>
               </div>
             )}
           </div>
@@ -785,6 +792,12 @@ function PropertiesPanel({
         {data.type === "output" && (
           <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
             Конечная точка выполнения. Завершает работу агента и возвращает итоговый ответ (Final Answer) обратно пользователю.
+          </p>
+        )}
+
+        {data.type === "knowledgeBase" && (
+          <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+            База знаний компании. Содержит статьи и инструкции. Инструмент поиска (Tool: Search) извлекает отсюда релевантные статьи.
           </p>
         )}
 
@@ -806,13 +819,7 @@ function PropertiesPanel({
               {data.type === "systemPrompt" ? "Выберите вариант системного промпта:" : "Выберите вариант субагента:"}
             </label>
             <div className="flex flex-col gap-2">
-              {(data.type === "systemPrompt" ?
-                (task.id === "tutorial-task" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial") :
-                  task.id === "task-2" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task2") :
-                    task.id === "task-3-files" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files") :
-                      task.id === "task-prompt-selection" ? SYSTEM_PROMPTS.filter(p => p.id === "sp_hr_naive" || p.id === "sp_hr_secure") :
-                        SYSTEM_PROMPTS.filter(p => !["sp_tutorial", "sp_task2", "sp_task3_files", "sp_hr_naive", "sp_hr_secure"].includes(p.id)))
-                : SUBAGENT_PROMPTS).map(p => (
+              {availablePrompts.map(p => (
                   <div
                     key={p.id}
                     onClick={() => onChangeData("selectedPromptId", p.id)}
@@ -839,7 +846,7 @@ function PropertiesPanel({
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
                       </span>
-                      {task.id === "task-3-files"
+                      {task.id === "task-3"
                         ? "Включите инструменты Create и Search/Bash для работы с файлами"
                         : "Включите инструмент Bash, чтобы агент мог его использовать"}
                     </div>
@@ -857,9 +864,11 @@ function PropertiesPanel({
                   const hasToolBash = nodes.some(n => n.data.type === "toolBash");
                   const hasToolSearch = nodes.some(n => n.data.type === "toolSearch");
 
+                    const hasToolSubagent = nodes.some(n => n.data.type === "subagent");
+
                   const ALL_TOOLS = task.id === "task-2" ? [
                     { id: "bash_node", label: "Tool: Bash", available: hasToolBash },
-                  ] : task.id === "task-3-files" ? [
+                  ] : task.id === "task-3" ? [
                     { id: "bash_node", label: "Tool: Bash", available: hasToolBash },
                     { id: "search_node", label: "Tool: Search", available: hasToolSearch },
                     { id: "create_node", label: "Tool: Create", available: hasToolCreate },
@@ -872,6 +881,7 @@ function PropertiesPanel({
                     { id: "delete_node", label: "Tool: Delete", available: hasToolDelete },
                     { id: "bash_node", label: "Tool: Bash", available: hasToolBash },
                     { id: "search_node", label: "Tool: Search", available: hasToolSearch },
+                    { id: "subagent_node", label: "Tool: Task/Subagent", available: hasToolSubagent },
                   ];
 
                   return (
@@ -923,9 +933,9 @@ function PropertiesPanel({
                     }}
                   />
                   <div className="flex flex-col">
-                    <span className="font-medium">Чтение заявок (ReadEmail)</span>
+                    <span className="font-medium">Чтение писем (ReadEmail)</span>
                     <span className="text-xs text-[var(--color-text-secondary)] mt-0.5 leading-tight">
-                      Позволяет агенту просматривать содержимое входящих заявок.
+                      Позволяет агенту просматривать содержимое входящих писем.
                     </span>
                   </div>
                 </label>
@@ -940,9 +950,9 @@ function PropertiesPanel({
                     }}
                   />
                   <div className="flex flex-col">
-                    <span className="font-medium">Удаление заявок (DeleteEmail)</span>
+                    <span className="font-medium">Удаление писем (DeleteEmail)</span>
                     <span className="text-xs text-[var(--color-text-secondary)] mt-0.5 leading-tight">
-                      Позволяет агенту удалять заявки из базы.
+                      Позволяет агенту удалять письма из базы.
                     </span>
                   </div>
                 </label>
@@ -951,7 +961,7 @@ function PropertiesPanel({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-[var(--color-text-secondary)]">
-                Заблокировать удаление заявок от контактов:
+                Заблокировать удаление писем от контактов:
               </label>
               <div className="flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
                 {Array.from(new Set(EMAIL_TEST_CASES.map(e => e.from))).map(email => (
@@ -959,12 +969,12 @@ function PropertiesPanel({
                     <input
                       type="checkbox"
                       className="mt-1"
-                      checked={(data.dispatcherProtectedEmails || []).includes(email)}
+                      checked={(data.dispatcherProtectedEmails || []).some(e => isEmailMatch(e, email))}
                       onChange={(e) => {
                         const current = data.dispatcherProtectedEmails || [];
                         onChangeData("dispatcherProtectedEmails", e.target.checked
-                          ? [...current, email]
-                          : current.filter(addr => addr !== email)
+                          ? [...current.filter(addr => !isEmailMatch(addr, email)), email]
+                          : current.filter(addr => !isEmailMatch(addr, email))
                         );
                       }}
                     />
@@ -1069,9 +1079,9 @@ function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; 
         {Object.entries(grouped).map(([idxStr, gLogs]) => {
           const idx = Number(idxStr);
           const isExpanded = expanded[idx];
-          const hasFailed = gLogs.some(l => l.message.includes("ПРОВАЛЕН") || l.message.includes("провален:"));
+          const hasFailed = gLogs.some(l => l.message.includes("ПРОВАЛЕН") || l.message.includes("провален:") || l.message.includes("ЗАДАЧА ПРОВАЛЕНА"));
           const hasSystemCrash = gLogs.some(l => l.source === 'system' && l.type === 'error');
-          const hasPassed = gLogs.some(l => l.message.includes("РАН ПРОЙДЕН УСПЕШНО") || l.message.includes("пройден успешно!"));
+          const hasPassed = gLogs.some(l => l.message.includes("РАН ПРОЙДЕН УСПЕШНО") || l.message.includes("пройден успешно!") || l.message.includes("ЗАДАЧА УСПЕШНО ВЫПОЛНЕНА"));
 
           const hasError = hasFailed || hasSystemCrash || (!hasPassed && gLogs.some(l => l.type === 'error'));
           const hasSuccess = hasPassed;
@@ -1115,55 +1125,51 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
   const router = useRouter();
   const storageKey = useMemo(() => `practice_flow_state_${task.id}`, [task.id]);
 
+  // Load saved state from localStorage immediately (synchronous, no race conditions)
   const initialNodes = useMemo(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.nodes && parsed.nodes.length > 0) return parsed.nodes;
-        }
-      } catch (e) {
-        console.error("Failed to restore nodes:", e);
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.nodes && parsed.nodes.length > 0) return parsed.nodes;
       }
-    }
-    if (task.blocks.includes("dataInput")) {
-      return [makeNode("dataInput")];
-    }
-    return task.blocks.slice(0, 1).map(b => makeNode(b));
-  }, [storageKey, task.blocks, task.id]);
-
-  const [nodes, setNodes, onNodesChange] = useNodesState<PracticeNode>(initialNodes);
+    } catch (e) {}
+    return task.blocks.includes("dataInput") ? [makeNode("dataInput")] : task.blocks.slice(0, 1).map(b => makeNode(b));
+  }, [storageKey]);
 
   const initialEdges = useMemo(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.edges) {
-            return parsed.edges.map((e: any) => {
-              if (e.sourceHandle === "exit") {
-                return { ...e, sourceHandle: "false" };
-              }
-              return e;
-            });
-          }
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.edges) {
+          return parsed.edges.map((e: any) => {
+            if (e.sourceHandle === "exit") return { ...e, sourceHandle: "false" };
+            return e;
+          });
         }
-      } catch (e) {
-        console.error("Failed to restore edges:", e);
       }
-    }
+    } catch (e) {}
     return [];
   }, [storageKey]);
 
+  const [nodes, setNodes, onNodesChange] = useNodesState<PracticeNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<PracticeEdge>(initialEdges);
+  const latestDataRef = useRef({ nodes: [] as PracticeNode[], edges: [] as PracticeEdge[] });
+  latestDataRef.current = { nodes: nodes.filter(n => !n.data.isGhost), edges };
 
+  // Save on unmount (always captures latest nodes/edges via ref)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const nodesToSave = nodes.filter(n => !n.data.isGhost);
-      localStorage.setItem(storageKey, JSON.stringify({ nodes: nodesToSave, edges }));
-    }
+    return () => {
+      const { nodes: nodesToSave, edges: edgesToSave } = latestDataRef.current;
+      localStorage.setItem(storageKey, JSON.stringify({ nodes: nodesToSave, edges: edgesToSave }));
+    };
+  }, [storageKey]);
+
+  // Keep localStorage in sync when nodes/edges change
+  useEffect(() => {
+    const nodesToSave = nodes.filter(n => !n.data.isGhost);
+    localStorage.setItem(storageKey, JSON.stringify({ nodes: nodesToSave, edges }));
   }, [nodes, edges, storageKey]);
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1223,7 +1229,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
   }, [task.id, task.requiredEdges, nodes, edges]);
 
   const showSysPromptError = useMemo(() => {
-    if (task.id === "task-3-files") {
+    if (task.id === "task-3") {
       const sysPromptNode = nodes.find(n => n.data.type === "systemPrompt");
       const tools = sysPromptNode?.data.systemPromptTools || [];
       const hasCreate = tools.includes("create_node");
@@ -1318,13 +1324,22 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
 
         return updated;
       });
-      setTimeout(() => rfInstance?.fitView({ padding: 0.3, duration: 300, maxZoom: 0.75 }), 50);
     } else {
       setNodes((current) => current.filter(n => !n.data.isGhost));
     }
   }, [tutorialStep, setNodes, rfInstance]);
 
   const selectedNode = useMemo(() => nodes.find((n) => n.selected), [nodes]);
+
+  const handleNodeDataChange = useCallback((key: string, value: any) => {
+    if (selectedNode) {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === selectedNode.id ? { ...n, data: { ...n.data, [key]: value } } : n
+        )
+      );
+    }
+  }, [selectedNode, setNodes]);
 
   const existingTypes = new Set(nodes.filter(n => !n.data.isGhost).map((node) => node.data.type));
 
@@ -1395,12 +1410,13 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
           isActiveStep: node.id === activeNodeId,
           isTutorialSource: tutorialStep === "connect_blocks" && isDataInput,
           isErrorHighlight,
+          taskBlocks: task.blocks,
         },
       };
     });
 
     return renderedNodes;
-  }, [deleteNode, nodes, loopNodes, activeNodeId, tutorialStep, showSysPromptError]);
+  }, [deleteNode, nodes, loopNodes, activeNodeId, tutorialStep, showSysPromptError, task.blocks]);
 
   const visibleEdges = useMemo(() => {
     const renderedEdges = edges.map((edge) => ({
@@ -1461,7 +1477,6 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
 
       return [...current.filter(n => !n.data.isGhost || n.data.type !== type), newNode];
     });
-    setTimeout(() => rfInstance?.fitView({ padding: 0.3, duration: 300, maxZoom: 0.75 }), 50);
     setEvaluation(null);
   }
 
@@ -1520,102 +1535,25 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       stopSimulation();
       return;
     }
-    await runSimulation(nodes, edges, count, task.id);
-    const realNodes = nodes.filter(n => !n.data.isGhost);
-    let missingBlocks = task.blocks.filter(t => !realNodes.some(n => n.data.type === t));
-    if (task.id === "task-3-files") {
-      const hasSearch = realNodes.some(n => n.data.type === "toolSearch");
-      const hasBash = realNodes.some(n => n.data.type === "toolBash");
-      if (hasSearch || hasBash) {
-        missingBlocks = missingBlocks.filter(b => b !== "toolBash" && b !== "toolSearch");
-      } else {
-        missingBlocks.push("toolSearch или toolBash" as any);
-      }
+    const result = await runSimulation(nodes, edges, count, task.id);
+    if (!result) {
+      setEvaluation(null);
+      return;
     }
 
-    const missingEdges = task.requiredEdges.filter(([srcType, tgtType]) => {
-      const edgeExists = edges.some(e => {
-        const s = nodes.find(n => n.id === e.source);
-        const t = nodes.find(n => n.id === e.target);
-        return s?.data.type === srcType && t?.data.type === tgtType;
-      });
-      return !edgeExists;
-    });
-
-    if (task.id === "task-3-files") {
-      const usedTool = realNodes.some(n => n.data.type === "toolSearch") ? "toolSearch" : realNodes.some(n => n.data.type === "toolBash") ? "toolBash" : null;
-      if (usedTool) {
-        if (!edges.some(e => {
-          const s = nodes.find(n => n.id === e.source);
-          const t = nodes.find(n => n.id === e.target);
-          return s?.data.type === "condition" && t?.data.type === usedTool;
-        })) {
-          missingEdges.push(["condition", usedTool]);
-        }
-        if (!edges.some(e => {
-          const s = nodes.find(n => n.id === e.source);
-          const t = nodes.find(n => n.id === e.target);
-          return s?.data.type === usedTool && t?.data.type === "messageHistory";
-        })) {
-          missingEdges.push([usedTool, "messageHistory"]);
-        }
-      }
-      const hasCreate = realNodes.some(n => n.data.type === "toolCreate");
-      if (hasCreate) {
-        if (!edges.some(e => {
-          const s = nodes.find(n => n.id === e.source);
-          const t = nodes.find(n => n.id === e.target);
-          return s?.data.type === "condition" && t?.data.type === "toolCreate";
-        })) {
-          missingEdges.push(["condition", "toolCreate"]);
-        }
-        if (!edges.some(e => {
-          const s = nodes.find(n => n.id === e.source);
-          const t = nodes.find(n => n.id === e.target);
-          return s?.data.type === "toolCreate" && t?.data.type === "messageHistory";
-        })) {
-          missingEdges.push(["toolCreate", "messageHistory"]);
-        }
-      }
-    }
-
-    const sysTools = realNodes.find(n => n.data.type === "systemPrompt")?.data.systemPromptTools || [];
-    const isTask3AndToolsMissing = task.id === "task-3-files" && (!sysTools.includes("create_node") || (!sysTools.includes("bash_node") && !sysTools.includes("search_node")));
-
-    const forbiddenHit = (task.forbiddenEdges || []).filter(([srcType, tgtType]) => {
-      return edges.some(e => {
-        const s = nodes.find(n => n.id === e.source);
-        const t = nodes.find(n => n.id === e.target);
-        return s?.data.type === srcType && t?.data.type === tgtType;
-      });
-    });
-    const isTask2AndBashMissing = task.id === "task-2" && !realNodes.find(n => n.data.type === "systemPrompt")?.data.systemPromptTools?.includes("bash_node");
-    let passed = missingBlocks.length === 0 && missingEdges.length === 0 && forbiddenHit.length === 0;
+    const passed = result.runsCount > 0 && result.passedRuns === result.runsCount;
     const feedback: string[] = [];
-    if (!passed) {
-      if (missingBlocks.length > 0) {
-        feedback.push(`Отсутствуют блоки: ${missingBlocks.join(", ")}`);
-      }
-      if (missingEdges.length > 0) {
-        feedback.push(`Не хватает связей: ${missingEdges.map(e => `${e[0]} → ${e[1]}`).join(", ")}`);
-      }
-      if (forbiddenHit.length > 0) {
-        feedback.push(`Лишние связи: ${forbiddenHit.map(e => `${e[0]} → ${e[1]}`).join(", ")}`);
+    
+    if (passed) {
+      feedback.push("Все тесты пройдены успешно!");
+      if (task.id === "tutorial-task") {
+        feedback.push("Первая задача успешно решена. Выберите следующую задачу.");
       }
     } else {
-      if (isTask2AndBashMissing) {
-        passed = false;
-        feedback.push("Граф собран верно, но инструмент Bash не выбран в настройках System Prompt.");
-      } else if (isTask3AndToolsMissing) {
-        passed = false;
-        feedback.push("Граф собран верно, но инструменты (Create и Search/Bash) не выбраны в настройках System Prompt.");
-      } else {
-        feedback.push("Все блоки добавлены и соединены правильно!");
-        if (task.id === "tutorial-task") {
-          feedback.push("Первая задача успешно решена. Выберите следующую задачу.");
-        }
-      }
+      feedback.push(`Пройдено тестов: ${result.passedRuns} из ${result.runsCount}`);
+      feedback.push("Проверьте логи (вкладка Логи) для понимания причины ошибки.");
     }
+
     setEvaluation({
       passed,
       score: passed ? task.score : 0,
@@ -1700,14 +1638,14 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       <section className="min-w-0 flex flex-col max-h-full">
         <div className="mb-3 shrink-0 flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
               {allTasks.length > 1 ? (
-                <div className="relative inline-block">
+                <div className="relative min-w-0 max-w-[280px]">
                   <select
                     value={task.id}
                     onChange={(e) => router.push(`/ru/practice/tasks/${e.target.value}`)}
                     className={cn(
-                      "text-base font-semibold bg-[var(--color-bg-secondary)] border rounded-md pl-3 pr-8 py-1.5 outline-none cursor-pointer appearance-none text-[var(--color-text)] transition-colors",
+                      "text-base font-semibold bg-[var(--color-bg-secondary)] border rounded-md pl-3 pr-8 py-1.5 outline-none cursor-pointer appearance-none text-[var(--color-text)] transition-colors truncate max-w-full",
                       showCongrats
                         ? "border-blue-500 ring-2 ring-blue-500/60 animate-pulse"
                         : "border-[var(--color-border)] hover:border-zinc-400 dark:hover:border-zinc-500"
@@ -1727,7 +1665,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
                   )}
                 </div>
               ) : (
-                <h1 className="text-base font-semibold">{task.title}</h1>
+                <h1 className="text-base font-semibold truncate min-w-0">{task.title}</h1>
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -1785,7 +1723,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
               ? "Соберите простой пайплайн для того чтобы нейросеть смогла вызвать чтение входящего email по схеме:"
               : task.id === "task-2"
                 ? "Соберите агента, который должен узнать какие файлы лежат в директории проекта. Создайте цикл с тулом bash и развилкой (Condition) по схеме:"
-                : task.description}
+                : task.description?.split('\n').map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}
           </p>
 
           {task.id === "tutorial-task" && (
@@ -1860,8 +1798,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
             onInit={setRfInstance}
             deleteKeyCode={["Backspace", "Delete"]}
             connectionRadius={60}
-            fitView={visibleNodes.length > 1}
-            fitViewOptions={{ padding: 0.2, maxZoom: 0.75 }}
+            fitView={false}
             defaultViewport={{ x: 50, y: 50, zoom: 0.75 }}
           >
             <Background color="#334155" gap={18} size={1.2} />
@@ -1961,15 +1898,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
           nodes={nodes}
           task={task}
           showSysPromptError={showSysPromptError}
-          onChangeData={(key, value) => {
-            if (selectedNode) {
-              setNodes((nds) =>
-                nds.map((n) =>
-                  n.id === selectedNode.id ? { ...n, data: { ...n.data, [key]: value } } : n
-                )
-              );
-            }
-          }}
+          onChangeData={handleNodeDataChange}
         />
       )}
     </div>

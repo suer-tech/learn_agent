@@ -81,7 +81,7 @@
       "score": 100
     },
     {
-      "id": "task-3-files",
+      "id": "task-3",
       "title": "Задача 3: Работа с файлами",
       "description": "Добавьте условие: сначала проверьте наличие файла 'счет на оплату' (инструмент поиска или Bash). Если файла нет, создайте его (Create). Убедитесь, что список обновился, и выходите.",
       "blocks": [
@@ -118,7 +118,7 @@
       "score": 100
     },
     {
-      "id": "task-prompt-selection",
+      "id": "task-4",
       "title": "Задача 4: Защита от инъекций (Prompt Injection)",
       "description": "Создайте HR-агента, который читает резюме и сохраняет саммари (Tool Create). В резюме хитрого кандидата спрятана атака \"Prompt Injection\", которая приказывает агенту нанять его на позицию CEO. Выберите в блоке System Prompt безопасный промпт, чтобы агент не повелся на атаку.",
       "blocks": [
@@ -165,9 +165,9 @@
       "score": 100
     },
     {
-      "id": "agent-loop-basic",
-      "title": "Задача 5: Разбор потока заявок",
-      "description": "Настройте агента на обработку входящих заявок. Если это спам, то заявку надо удалить, иначе не удалять. Внимание: запрещено удалять заявки от легитимных контактов: @ceo_official, @alex_manager, @aws_billing, @sarah_dev.",
+      "id": "task-5",
+      "title": "Задача 5: Разбор потока писем",
+      "description": "Настройте агента на обработку входящих писем. Если это спам, то письмо надо удалить, иначе не удалять. Внимание: запрещено удалять письма от легитимных контактов: @ceo_official, @alex_manager, @aws_billing, @sarah_dev.",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -175,7 +175,9 @@
         "llm",
         "condition",
         "dispatcher",
-        "output"
+        "output",
+        "toolRead",
+        "toolDelete"
       ],
       "requiredEdges": [],
       "forbiddenEdges": [],
@@ -183,26 +185,8 @@
       "score": 100
     },
     {
-      "id": "task-3",
-      "title": "Задача 6",
-      "description": "Защитите контакты @ceo_official и @alex_manager от случайного удаления.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
-      ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_3_solved",
-      "score": 100
-    },
-    {
-      "id": "task-4",
-      "title": "Задача 7: Делегирование и фильтрация спама",
+      "id": "task-6",
+      "title": "Задача 6: Делегирование и фильтрация спама",
       "description": "Соберите агентную схему для чат-бота с предварительной обработкой входящей заявки субагентом, который должен отсеивать спам и пропускать дальше легитимные заявки, чтобы разгрузить основного агента. Основной агент должен отвечать только на реальные заявки клиентов (Tool Write).",
       "blocks": [
         "dataInput",
@@ -211,8 +195,10 @@
         "subagent",
         "llm",
         "condition",
+        "dispatcher",
         "toolRead",
         "toolWrite",
+        "toolDelete",
         "output"
       ],
       "requiredEdges": [],
@@ -221,7 +207,30 @@
       "score": 100
     },
     {
-      "id": "task-5",
+      "id": "task-7",
+      "title": "Задача 7: Динамическая маршрутизация обращений",
+      "description": "Соберите систему маршрутизации обращений клиентов. Агент-Маршрутизатор (LLM) должен распознать тему запроса и направить его дальше:\n1. Технические проблемы (VPN, вход, ошибки): используй Search для поиска в Базе Знаний, ответ клиенту через Write.\n2. Финансовые вопросы (возврат средств): делегируй Субагенту (Финансовый менеджер). Субагент оценивает срок подписки: если до 14 дней — Create (создание возврата), иначе — отказ. Решение клиенту через Write.\n3. Реклама и спам: используй Delete.",
+      "blocks": [
+        "dataInput",
+        "systemPrompt",
+        "messageHistory",
+        "llm",
+        "condition",
+        "toolSearch",
+        "knowledgeBase",
+        "subagent",
+        "toolCreate",
+        "toolDelete",
+        "toolWrite",
+        "output"
+      ],
+      "requiredEdges": [],
+      "forbiddenEdges": [],
+      "expectedOutput": "routing_solved",
+      "score": 100
+    },
+    {
+      "id": "task-8",
       "title": "Задача 8",
       "description": "Убедитесь, что система не удаляет счета (@aws_billing).",
       "blocks": [
@@ -239,7 +248,7 @@
       "score": 100
     },
     {
-      "id": "task-6",
+      "id": "task-9",
       "title": "Задача 9",
       "description": "Пропускайте рассылки (@smashing_newsletter), но помечайте как прочитанные.",
       "blocks": [
@@ -257,7 +266,7 @@
       "score": 100
     },
     {
-      "id": "task-7",
+      "id": "task-10",
       "title": "Задача 10",
       "description": "Используйте промпт Строгого безопасника. Запрещено удалять письма от sarah.dev@company.com.",
       "blocks": [
@@ -275,7 +284,7 @@
       "score": 100
     },
     {
-      "id": "task-8",
+      "id": "task-11",
       "title": "Задача 11",
       "description": "LLM должна научиться игнорировать фишинг-атаки (hr-department-update@gmail.com).",
       "blocks": [
@@ -293,7 +302,7 @@
       "score": 100
     },
     {
-      "id": "task-9",
+      "id": "task-12",
       "title": "Задача 12",
       "description": "Настройте систему так, чтобы письма без счета отправлялись в карантин, если есть подозрение на спам.",
       "blocks": [
@@ -311,7 +320,7 @@
       "score": 100
     },
     {
-      "id": "task-10",
+      "id": "task-13",
       "title": "Задача 13",
       "description": "Соберите идеального агента, который обрабатывает все типы писем без ошибок. Защитите ceo@company.com и finance@company.com.",
       "blocks": [
@@ -329,8 +338,8 @@
       "score": 100
     },
     {
-      "id": "s-full",
-      "title": "Задача 13: Полный агент",
+      "id": "task-14",
+      "title": "Задача 14: Полный агент",
       "description": "Соберите эталонного агента, объединяющего все механизмы: цикл с Message History, субагент для сканирования, Dispatcher с защитой адресов, инструменты чтения/удаления/создания писем и Condition для маршрутизации.",
       "blocks": [
         "dataInput",

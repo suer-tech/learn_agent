@@ -49,6 +49,7 @@ export type PracticeBlockType =
   | "systemPrompt"
   | "subagent"
   | "output"
+  | "knowledgeBase"
   | "condition";
 
 export interface PracticeTask {
