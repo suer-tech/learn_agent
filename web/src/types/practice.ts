@@ -12,7 +12,7 @@ export interface PracticeUser {
   status: PracticeUserStatus;
   source: string;
   lastEventAt: string;
-  verifiedMonth: string;
+  verifiedDate: string;
   accessUntil: string;
 }
 
