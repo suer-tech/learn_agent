@@ -2,10 +2,11 @@ FROM node:20-slim
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production
-
+# Копируем всё
 COPY . .
+
+# Удаляем node_modules с хоста (если они случайно скопировались) и ставим заново под Linux
+RUN rm -rf node_modules && npm install --omit=dev
 
 # Create data directory for SQLite volume
 RUN mkdir -p data
