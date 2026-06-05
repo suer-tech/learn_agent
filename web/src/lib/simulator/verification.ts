@@ -651,6 +651,7 @@ export const REGRESSION_TESTS: RegressionTest[] = [
       { id: "n3", data: { type: "messageHistory" } },
       { id: "n4", data: { type: "llm" } },
       { id: "n5", data: { type: "condition", conditionMode: "tool_select" } },
+      { id: "n13", data: { type: "condition", conditionMode: "tool_select" } },
       { id: "n6", data: { type: "toolSearch" } },
       { id: "n7", data: { type: "knowledgeBase" } },
       { id: "n8", data: { type: "subagent", selectedPromptId: "sub_financial_manager" } },
@@ -664,24 +665,26 @@ export const REGRESSION_TESTS: RegressionTest[] = [
       { source: "n2", target: "n3" },
       { source: "n3", target: "n4" },
       { source: "n4", target: "n5" },
-      // Routing
-      { source: "n5", target: "n6", sourceHandle: "true" },
+      // Routing from Main LLM
+      { source: "n5", target: "n6", sourceHandle: "search" },
       { source: "n6", target: "n7" },
       { source: "n7", target: "n3" },
       
-      { source: "n5", target: "n8", sourceHandle: "true" },
-      { source: "n8", target: "n5", sourceHandle: "true" },
-      { source: "n8", target: "n3", sourceHandle: "false" },
-      { source: "n5", target: "n9", sourceHandle: "true" },
+      { source: "n5", target: "n8", sourceHandle: "subagent" },
+      // Subagent logic using second router (n13)
+      { source: "n8", target: "n13" },
+      { source: "n13", target: "n9", sourceHandle: "create" },
+      { source: "n13", target: "n3", sourceHandle: "false" }, // Exit from subagent goes to Message History
+      
       { source: "n9", target: "n3" },
       
-      { source: "n5", target: "n10", sourceHandle: "true" },
+      { source: "n5", target: "n10", sourceHandle: "delete" },
       { source: "n10", target: "n12" },
       
-      { source: "n5", target: "n11", sourceHandle: "true" },
+      { source: "n5", target: "n11", sourceHandle: "write" },
       { source: "n11", target: "n12" },
       
-      { source: "n5", target: "n12", sourceHandle: "false" }
+      { source: "n5", target: "n12", sourceHandle: "false" } // Exit from Main LLM goes to Output
     ],
     expected: {
       passed: true,

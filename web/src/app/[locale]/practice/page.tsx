@@ -38,13 +38,6 @@ export default async function PracticePage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href={`/ru/practice/tests`}
-            className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-zinc-800/20 hover:border-zinc-400 dark:hover:bg-zinc-800/30 transition-all duration-300"
-          >
-            <Activity size={16} className="text-indigo-400" />
-            Регрессионные тесты
-          </Link>
           <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">
             <Trophy size={16} className="text-amber-500" />
             {passed} / {tasks.length} задач пройдено
@@ -63,9 +56,6 @@ export default async function PracticePage() {
                   <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                     <StatusIcon status={status} />
                     {STATUS_LABELS[status]}
-                  </div>
-                  <div className="text-sm tabular-nums text-[var(--color-text-secondary)]">
-                    {item?.score ?? 0} / {task.score}
                   </div>
                 </div>
                 <h2 className="mt-4 text-base font-semibold group-hover:underline">{task.title}</h2>

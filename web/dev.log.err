@@ -1,0 +1,35 @@
+  Skipping s_full.py: could not determine version ID
+⨯ ./src/components/practice/trainer.tsx:824:17
+Parsing ecmascript source code failed
+[0m [90m 822 |[39m                   )}
+ [90m 823 |[39m                 [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 824 |[39m               [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m     |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 825 |[39m               [33m<[39m[33m/[39m[33m>[39m
+ [90m 826 |[39m             )}
+ [90m 827 |[39m             ) [33m:[39m ([0m
+
+Expected '</', got 'ident'
+
+Import trace:
+  Server Component:
+    ./src/components/practice/trainer.tsx
+    ./src/app/[locale]/practice/tasks/[taskId]/page.tsx
+
+
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: inferredConditionMode is not defined
+    at <unknown> (src\components\practice\trainer.tsx:1510:26)
+    at Array.map (<anonymous>)
+    at <unknown> (src\components\practice\trainer.tsx:1496:33)
+    at PracticeTrainer (src\components\practice\trainer.tsx:1495:31)
+  1508 |         data: {
+  1509 |           ...node.data,
+> 1510 |           conditionMode: inferredConditionMode,
+       |                          ^
+  1511 |           taskId: task.id,
+  1512 |           onDelete: deleteNode,
+  1513 |           isActiveLoop: loopNodes.has(node.id), {
+  digest: '1035031801'
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.

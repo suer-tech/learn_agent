@@ -31,7 +31,14 @@
       ],
       "forbiddenEdges": [],
       "expectedOutput": "tutorial_solved",
-      "score": 100
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_tutorial"
+      ],
+      "allowedTools": [
+        "read_node",
+        "read"
+      ]
     },
     {
       "id": "task-2",
@@ -78,7 +85,13 @@
       ],
       "forbiddenEdges": [],
       "expectedOutput": "task_2_solved",
-      "score": 100
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_task2"
+      ],
+      "allowedTools": [
+        "bash_node"
+      ]
     },
     {
       "id": "task-3",
@@ -115,7 +128,15 @@
       ],
       "forbiddenEdges": [],
       "expectedOutput": "task_3_files_solved",
-      "score": 100
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_task3_files"
+      ],
+      "allowedTools": [
+        "create_node",
+        "bash_node",
+        "search_node"
+      ]
     },
     {
       "id": "task-4",
@@ -162,7 +183,14 @@
       ],
       "forbiddenEdges": [],
       "expectedOutput": "task_prompt_selection_solved",
-      "score": 100
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_hr_naive",
+        "sp_hr_secure"
+      ],
+      "allowedTools": [
+        "create_node"
+      ]
     },
     {
       "id": "task-5",
@@ -182,12 +210,23 @@
       "requiredEdges": [],
       "forbiddenEdges": [],
       "expectedOutput": "agent_loop_solved",
-      "score": 100
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_basic",
+        "sp_aggressive",
+        "sp_security"
+      ],
+      "allowedTools": [
+        "read_node",
+        "read",
+        "delete_node",
+        "delete"
+      ]
     },
     {
       "id": "task-6",
       "title": "Задача 6: Делегирование и фильтрация спама",
-      "description": "Соберите агентную схему для чат-бота с предварительной обработкой входящей заявки субагентом, который должен отсеивать спам и пропускать дальше легитимные заявки, чтобы разгрузить основного агента. Основной агент должен отвечать только на реальные заявки клиентов (Tool Write).",
+      "description": "Соберите агентную схему для ответа на входящие письма клиентов с предварительной обработкой текста письма субагентом, который должен отсеивать спам и пропускать дальше легитимные обращения, чтобы разгрузить основного агента. Основной агент должен отвечать только на реальные письма клиентов (Tool Write).",
       "blocks": [
         "dataInput",
         "messageHistory",
@@ -204,7 +243,23 @@
       "requiredEdges": [],
       "forbiddenEdges": [],
       "expectedOutput": "task_4_solved",
-      "score": 100
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_support_smart",
+        "sp_basic"
+      ],
+      "allowedSubagentPrompts": [
+        "sub_spam_filter",
+        "sub_translator"
+      ],
+      "allowedTools": [
+        "read_node",
+        "read",
+        "write_node",
+        "delete_node",
+        "delete",
+        "subagent_node"
+      ]
     },
     {
       "id": "task-7",
@@ -227,220 +282,23 @@
       "requiredEdges": [],
       "forbiddenEdges": [],
       "expectedOutput": "routing_solved",
-      "score": 100
-    },
-    {
-      "id": "task-8",
-      "title": "Задача 8",
-      "description": "Убедитесь, что система не удаляет счета (@aws_billing).",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
+      "score": 100,
+      "allowedSystemPrompts": [
+        "sp_router",
+        "sp_support_basic"
       ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_5_solved",
-      "score": 100
-    },
-    {
-      "id": "task-9",
-      "title": "Задача 9",
-      "description": "Пропускайте рассылки (@smashing_newsletter), но помечайте как прочитанные.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
+      "allowedSubagentPrompts": [
+        "sub_financial_manager",
+        "sub_summarizer"
       ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_6_solved",
-      "score": 100
-    },
-    {
-      "id": "task-10",
-      "title": "Задача 10",
-      "description": "Используйте промпт Строгого безопасника. Запрещено удалять письма от sarah.dev@company.com.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
-      ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_7_solved",
-      "score": 100
-    },
-    {
-      "id": "task-11",
-      "title": "Задача 11",
-      "description": "LLM должна научиться игнорировать фишинг-атаки (hr-department-update@gmail.com).",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
-      ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_8_solved",
-      "score": 100
-    },
-    {
-      "id": "task-12",
-      "title": "Задача 12",
-      "description": "Настройте систему так, чтобы письма без счета отправлялись в карантин, если есть подозрение на спам.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
-      ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_9_solved",
-      "score": 100
-    },
-    {
-      "id": "task-13",
-      "title": "Задача 13",
-      "description": "Соберите идеального агента, который обрабатывает все типы писем без ошибок. Защитите ceo@company.com и finance@company.com.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "llm",
-        "condition",
-        "dispatcher",
-        "output"
-      ],
-      "requiredEdges": [],
-      "forbiddenEdges": [],
-      "expectedOutput": "task_10_solved",
-      "score": 100
-    },
-    {
-      "id": "task-14",
-      "title": "Задача 14: Полный агент",
-      "description": "Соберите эталонного агента, объединяющего все механизмы: цикл с Message History, субагент для сканирования, Dispatcher с защитой адресов, инструменты чтения/удаления/создания писем и Condition для маршрутизации.",
-      "blocks": [
-        "dataInput",
-        "messageHistory",
-        "systemPrompt",
-        "subagent",
-        "llm",
-        "condition",
-        "dispatcher",
-        "toolRead",
-        "toolWrite",
-        "toolCreate",
-        "toolDelete",
-        "output"
-      ],
-      "requiredEdges": [
-        [
-          "dataInput",
-          "messageHistory"
-        ],
-        [
-          "messageHistory",
-          "llm"
-        ],
-        [
-          "llm",
-          "condition"
-        ],
-        [
-          "condition",
-          "subagent"
-        ],
-        [
-          "subagent",
-          "llm"
-        ],
-        [
-          "condition",
-          "dispatcher"
-        ],
-        [
-          "dispatcher",
-          "toolRead"
-        ],
-        [
-          "toolRead",
-          "messageHistory"
-        ],
-        [
-          "dispatcher",
-          "toolWrite"
-        ],
-        [
-          "toolWrite",
-          "output"
-        ],
-        [
-          "dispatcher",
-          "toolDelete"
-        ],
-        [
-          "toolDelete",
-          "output"
-        ],
-        [
-          "dispatcher",
-          "toolCreate"
-        ],
-        [
-          "toolCreate",
-          "output"
-        ],
-        [
-          "condition",
-          "output"
-        ]
-      ],
-      "forbiddenEdges": [
-        [
-          "llm",
-          "toolRead"
-        ],
-        [
-          "llm",
-          "output"
-        ],
-        [
-          "dataInput",
-          "output"
-        ],
-        [
-          "dispatcher",
-          "output"
-        ],
-        [
-          "llm",
-          "dispatcher"
-        ]
-      ],
-      "expectedOutput": "s_full_solved",
-      "score": 200
+      "allowedTools": [
+        "write_node",
+        "create_node",
+        "delete_node",
+        "delete",
+        "search_node",
+        "subagent_node"
+      ]
     }
   ]
 }

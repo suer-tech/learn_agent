@@ -25,7 +25,7 @@ import {
   type NodeProps,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import { CheckCircle2, Play, Plus, RotateCcw, X, XCircle, Maximize2, Minimize2, ChevronDown, ChevronRight } from "lucide-react";
+import { CheckCircle2, Play, Plus, RotateCcw, X, XCircle, Maximize2, Maximize, Minimize2, ChevronDown, ChevronRight } from "lucide-react";
 import type { EvaluationResult, PracticeBlockType, PracticeTask } from "@/types/practice";
 import { cn } from "@/lib/utils";
 import { SYSTEM_PROMPTS, SUBAGENT_PROMPTS } from "@/lib/simulator/prompts";
@@ -148,11 +148,12 @@ function PracticeBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
         "relative w-52 rounded-lg border-2 bg-white text-zinc-950 shadow-lg transition-all duration-500 dark:bg-zinc-900 dark:text-white",
         selected ? "border-blue-500" : "border-zinc-300 dark:border-zinc-600",
         data.isActiveLoop && !data.isActiveStep ? "shadow-[0_0_20px_rgba(59,130,246,0.6)] ring-2 ring-blue-400 dark:ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950" : "",
-        data.isActiveStep ? "shadow-[0_0_30px_rgba(250,204,21,0.8)] border-yellow-400 ring-4 ring-yellow-400 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-105 z-50" : "",
+        data.isActiveStep ? "border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.7)] ring-4 ring-yellow-400/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-110 z-50" : "",
         data.isGhost ? "border-dashed border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/40 pointer-events-none z-0 animate-[ghostPulse_2s_ease-in-out_infinite]" : "",
         data.isErrorHighlight ? "shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500 ring-2 ring-red-400 dark:ring-red-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 animate-pulse z-40" : ""
       )}
     >
+
       <button
         type="button"
         aria-label={`Удалить ${data.label}`}
@@ -169,7 +170,7 @@ function PracticeBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
         type="target"
         id="top"
         position={Position.Top}
-        className="!top-[-6px] !left-1/2 !-ml-[-5px] !h-2.5 !w-2.5 !rounded-full !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900"
+        className="!top-[-6px] !left-1/2 !h-2.5 !w-2.5 !rounded-full !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900"
       />
 
       <div className="flex h-[72px] items-center gap-3 px-4 py-3 pr-10">
@@ -222,9 +223,10 @@ function ConditionBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
         "relative w-56 rounded-lg border-2 bg-white text-zinc-950 shadow-lg transition-all duration-500 dark:bg-zinc-900 dark:text-white",
         selected ? "border-fuchsia-500" : "border-zinc-300 dark:border-zinc-600",
         data.isActiveLoop && !data.isActiveStep ? "shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-2 ring-fuchsia-400 dark:ring-fuchsia-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950" : "",
-        data.isActiveStep ? "shadow-[0_0_30px_rgba(250,204,21,0.8)] border-yellow-400 ring-4 ring-yellow-400 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-105 z-50" : ""
+        data.isActiveStep ? "border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.7)] ring-4 ring-yellow-400/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-110 z-50" : ""
       )}
     >
+
       <button
         type="button"
         aria-label={`Удалить ${data.label}`}
@@ -241,7 +243,7 @@ function ConditionBlockNode({ id, data, selected }: NodeProps<PracticeNode>) {
         type="target"
         id="top"
         position={Position.Top}
-        className="!top-[-6px] !left-1/2 !-ml-[-5px] !h-2.5 !w-2.5 !rounded-full !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900"
+        className="!top-[-6px] !left-1/2 !h-2.5 !w-2.5 !rounded-full !border-2 !border-zinc-300 !bg-white dark:!border-zinc-600 dark:!bg-zinc-900"
       />
 
       <div className="flex h-[72px] items-center gap-3 px-4 py-3 pr-10">
@@ -380,8 +382,9 @@ function DataInputNode({ id, data, selected }: NodeProps<PracticeNode>) {
   return (
     <div
       className={cn(
-        "relative w-48 rounded-lg border-2 bg-indigo-50 text-indigo-950 shadow-md transition-colors dark:bg-indigo-950/30 dark:text-indigo-100",
-        selected ? "border-indigo-500" : "border-indigo-300 dark:border-indigo-800"
+        "relative w-52 rounded-lg border-2 bg-indigo-50 text-indigo-950 shadow-md transition-colors dark:bg-indigo-950/30 dark:text-indigo-100",
+        selected ? "border-indigo-500" : "border-indigo-300 dark:border-indigo-800",
+        data.isActiveStep ? "border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.7)] ring-4 ring-yellow-400/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 scale-110 z-50 transition-all duration-300" : ""
       )}
     >
       <button
@@ -428,6 +431,19 @@ function DataInputNode({ id, data, selected }: NodeProps<PracticeNode>) {
   );
 }
 
+const EDGE_HANDLE_COLORS: Record<string, string> = {
+  bash: "#a855f7",
+  search: "#f59e0b",
+  read: "#06b6d4",
+  write: "#3b82f6",
+  create: "#10b981",
+  delete: "#ef4444",
+  false: "#ef4444",
+  spam: "#ef4444",
+  not_spam: "#10b981",
+  subagent: "#9333ea",
+};
+
 function PracticeRouteEdge({
   id,
   sourceX: defaultSourceX,
@@ -443,7 +459,19 @@ function PracticeRouteEdge({
   target,
   sourceHandleId,
 }: EdgeProps<PracticeEdge>) {
-  const { getNode } = useReactFlow();
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { getNode, getEdges } = useReactFlow();
+
+  const handleMouseEnter = useCallback(() => {
+    if (hoverTimeout.current) { clearTimeout(hoverTimeout.current); hoverTimeout.current = null; }
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    hoverTimeout.current = setTimeout(() => setIsHovered(false), 150);
+  }, []);
+
   const sourceNode = getNode(source);
   const targetNode = getNode(target);
 
@@ -488,15 +516,39 @@ function PracticeRouteEdge({
     endY = tY;
   }
 
-  // Calculate dynamic X spacing if multiple edges enter the same face
-  const { getEdges } = useReactFlow();
-  const edgesEnteringSameFace = getEdges().filter(e => {
+  // === Source edge offset: fan out outgoing edges from same handle ===
+  const allEdges = getEdges();
+  const edgesFromSameSource = allEdges.filter(e => {
+    if (e.source !== source) return false;
+    const eHandle = (e as any).sourceHandle ?? null;
+    const myHandle = sourceHandleId ?? null;
+    return eHandle === myHandle;
+  });
+
+  if (edgesFromSameSource.length > 1) {
+    edgesFromSameSource.sort((a, b) => {
+      const aTarget: any = getNode(a.target);
+      const bTarget: any = getNode(b.target);
+      const aY = aTarget?.positionAbsolute?.y ?? aTarget?.position?.y ?? 0;
+      const bY = bTarget?.positionAbsolute?.y ?? bTarget?.position?.y ?? 0;
+      return aY - bY;
+    });
+    const idx = edgesFromSameSource.findIndex(e => e.id === id);
+    if (idx !== -1) {
+      const spacing = 8;
+      const total = (edgesFromSameSource.length - 1) * spacing;
+      startY += -total / 2 + idx * spacing;
+    }
+  }
+
+  // === Target edge offset: distribute incoming edges on same face ===
+  const edgesEnteringSameFace = allEdges.filter(e => {
     if (e.target !== targetNode.id) return false;
-    const sNode: any = getNode(e.source);
-    if (!sNode) return false;
-    const eSX = sNode.positionAbsolute?.x ?? sNode.position?.x ?? 0;
-    const eSY = sNode.positionAbsolute?.y ?? sNode.position?.y ?? 0;
-    const eSH = sNode.measured?.height ?? sNode.height ?? 72;
+    const sn: any = getNode(e.source);
+    if (!sn) return false;
+    const eSX = sn.positionAbsolute?.x ?? sn.position?.x ?? 0;
+    const eSY = sn.positionAbsolute?.y ?? sn.position?.y ?? 0;
+    const eSH = sn.measured?.height ?? sn.height ?? 72;
 
     const eIsBackward = eSX >= tX - 20;
     const eIsTargetAbove = eSY > tY + tH - 20;
@@ -517,13 +569,11 @@ function PracticeRouteEdge({
       const bX = bNode?.positionAbsolute?.x ?? bNode?.position?.x ?? 0;
       return aX - bX;
     });
-
     const faceEdgeIndex = edgesEnteringSameFace.findIndex(e => e.id === id);
     if (faceEdgeIndex !== -1) {
       const spacing = 16;
       const totalWidth = (edgesEnteringSameFace.length - 1) * spacing;
-      const startOffsetX = -totalWidth / 2;
-      endX += startOffsetX + faceEdgeIndex * spacing;
+      endX += -totalWidth / 2 + faceEdgeIndex * spacing;
     }
   }
 
@@ -547,7 +597,20 @@ function PracticeRouteEdge({
 
   const isLoop = data?.isActiveLoop;
 
-  let targetDotColor = isLoop ? "#8b5cf6" : "#94a3b8";
+  // === Semantic edge color ===
+  let edgeColor = "#64748b";
+  if (isLoop) {
+    edgeColor = "#8b5cf6";
+  } else if (sourceHandleId && EDGE_HANDLE_COLORS[sourceHandleId]) {
+    edgeColor = EDGE_HANDLE_COLORS[sourceHandleId];
+  } else if (selected) {
+    edgeColor = "#3b82f6";
+  }
+
+  const displayColor = isHovered && !isLoop
+    ? (edgeColor === "#64748b" ? "#3b82f6" : edgeColor)
+    : edgeColor;
+  const strokeWidth = isHovered ? 3 : 2;
 
   return (
     <>
@@ -556,12 +619,27 @@ function PracticeRouteEdge({
         path={edgePath}
         markerEnd={markerEnd}
         style={{
-          stroke: isLoop ? "#8b5cf6" : (selected ? "#3b82f6" : "#94a3b8"),
-          strokeWidth: 2,
-          filter: isLoop ? "drop-shadow(0 0 6px rgba(139,92,246,0.6))" : "none",
+          stroke: displayColor,
+          strokeWidth,
+          filter: isLoop
+            ? "drop-shadow(0 0 6px rgba(139,92,246,0.6))"
+            : isHovered
+              ? `drop-shadow(0 0 4px ${displayColor}88)`
+              : "none",
           strokeDasharray: isLoop ? "8 8" : "none",
           animation: isLoop ? "dash 1.5s linear infinite" : "none",
+          transition: "stroke 0.2s ease, stroke-width 0.15s ease, filter 0.2s ease",
         }}
+      />
+      {/* Invisible wider path for easier hover detection */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={20}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{ pointerEvents: "stroke" }}
       />
       <style>{`
         @keyframes dash {
@@ -578,9 +656,15 @@ function PracticeRouteEdge({
             event.stopPropagation();
             data?.onDelete?.(id);
           }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           className={cn(
-            "nodrag nopan absolute flex h-7 w-7 items-center justify-center rounded-full border bg-white shadow-sm transition-colors pointer-events-auto",
-            isLoop ? "border-violet-400 text-violet-600 dark:bg-zinc-900 dark:text-violet-300 hover:border-red-500 hover:text-red-500" : "border-blue-200 text-blue-600 hover:border-red-300 hover:text-red-600 dark:border-blue-900 dark:bg-zinc-900 dark:text-blue-300 dark:hover:border-red-700 dark:hover:text-red-300"
+            "nodrag nopan absolute flex h-7 w-7 items-center justify-center rounded-full border bg-white shadow-sm pointer-events-auto",
+            isLoop
+              ? "border-violet-400 text-violet-600 dark:bg-zinc-900 dark:text-violet-300 hover:border-red-500 hover:text-red-500"
+              : "border-blue-200 text-blue-600 hover:border-red-300 hover:text-red-600 dark:border-blue-900 dark:bg-zinc-900 dark:text-blue-300 dark:hover:border-red-700 dark:hover:text-red-300",
+            "transition-all duration-200",
+            isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
@@ -589,9 +673,6 @@ function PracticeRouteEdge({
           <X size={13} />
         </button>
       </EdgeLabelRenderer>
-
-      {/* Target Dot */}
-      <circle cx={endX} cy={endY} r={3} fill="#fff" stroke={targetDotColor} strokeWidth={2} className="pointer-events-none" />
     </>
   );
 }
@@ -649,19 +730,19 @@ function PropertiesPanel({
   const availablePrompts = useMemo(() => {
     if (!data) return [];
     if (data.type === "systemPrompt") {
-      if (task.id === "tutorial-task") return SYSTEM_PROMPTS.filter(p => p.id === "sp_tutorial");
-      if (task.id === "task-2") return SYSTEM_PROMPTS.filter(p => p.id === "sp_task2");
-      if (task.id === "task-3") return SYSTEM_PROMPTS.filter(p => p.id === "sp_task3_files");
-      if (task.id === "task-4") return SYSTEM_PROMPTS.filter(p => p.id === "sp_hr_naive" || p.id === "sp_hr_secure");
-      if (task.id === "task-7") return SYSTEM_PROMPTS.filter(p => p.id === "sp_router" || p.id === "sp_support_basic");
-      return SYSTEM_PROMPTS.filter(p => !["sp_tutorial", "sp_task2", "sp_task3_files", "sp_hr_naive", "sp_hr_secure", "sp_router", "sp_support_basic"].includes(p.id));
+      if (task.allowedSystemPrompts) {
+        return SYSTEM_PROMPTS.filter(p => task.allowedSystemPrompts!.includes(p.id));
+      }
+      return SYSTEM_PROMPTS;
     }
     if (data.type === "subagent") {
-      if (task.id === "task-7") return SUBAGENT_PROMPTS.filter(p => p.id === "sub_financial_manager" || p.id === "sub_summarizer");
+      if (task.allowedSubagentPrompts) {
+        return SUBAGENT_PROMPTS.filter(p => task.allowedSubagentPrompts!.includes(p.id));
+      }
       return SUBAGENT_PROMPTS;
     }
     return [];
-  }, [data?.type, task.id]);
+  }, [data?.type, task.allowedSystemPrompts, task.allowedSubagentPrompts]);
 
   const taskToolsStr = useMemo(() => {
     const list: string[] = [];
@@ -866,13 +947,7 @@ function PropertiesPanel({
 
                     const hasToolSubagent = nodes.some(n => n.data.type === "subagent");
 
-                  const ALL_TOOLS = task.id === "task-2" ? [
-                    { id: "bash_node", label: "Tool: Bash", available: hasToolBash },
-                  ] : task.id === "task-3" ? [
-                    { id: "bash_node", label: "Tool: Bash", available: hasToolBash },
-                    { id: "search_node", label: "Tool: Search", available: hasToolSearch },
-                    { id: "create_node", label: "Tool: Create", available: hasToolCreate },
-                  ] : [
+                  const ALL_TOOLS = [
                     { id: "read", label: "Dispatcher: Read", available: hasDispRead },
                     { id: "delete", label: "Dispatcher: Delete", available: hasDispDelete },
                     { id: "read_node", label: "Tool: Read", available: hasToolRead },
@@ -882,7 +957,7 @@ function PropertiesPanel({
                     { id: "bash_node", label: "Tool: Bash", available: hasToolBash },
                     { id: "search_node", label: "Tool: Search", available: hasToolSearch },
                     { id: "subagent_node", label: "Tool: Task/Subagent", available: hasToolSubagent },
-                  ];
+                  ].filter(t => !task.allowedTools || task.allowedTools.includes(t.id));
 
                   return (
                     <div className="flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
@@ -1005,49 +1080,65 @@ function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; 
   }, [runsLogs]);
 
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const newExpanded = { ...expanded };
-    if (isRunning) {
-      if (runsCount === 1) {
-        const keys = Object.keys(grouped).map(Number);
-        if (keys.length > 0) {
-          const highest = Math.max(...keys);
-          newExpanded[highest] = true;
-        }
+    if (isRunning && runsCount === 1) {
+      const keys = Object.keys(grouped).map(Number);
+      if (keys.length > 0) {
+        const highest = Math.max(...keys);
+        setExpanded(prev => {
+          if (prev[highest]) return prev;
+          return { ...prev, [highest]: true };
+        });
       }
-    } else {
-      Object.entries(grouped).forEach(([idx, gLogs]) => {
-        const hasError = gLogs.some(l => l.type === 'error' || l.message.includes("ПРОВАЛЕН"));
-        newExpanded[Number(idx)] = hasError;
+    }
+  }, [isRunning, runsCount, grouped]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth"
       });
     }
-    setExpanded(newExpanded);
-  }, [isRunning, runsLogs.length, runsCount]);
+  }, [logs, expanded]);
 
   const toggleRun = (idx: number) => {
     setExpanded(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  const renderLogItem = (log: LogEntry) => (
-    <div
-      key={log.id}
-      className={cn(
-        "p-2.5 rounded border leading-relaxed whitespace-pre-wrap",
-        log.type === "error" ? "bg-red-50/50 border-red-200 text-red-900 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400" :
-          log.type === "success" ? "bg-emerald-50/50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400" :
-            log.type === "warning" ? "bg-amber-50/50 border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400" :
-              "bg-white border-zinc-200 text-zinc-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300",
-        log.message.includes("Подсказка:") ? "animate-blink-three shadow-md ring-2 ring-yellow-400/50 dark:ring-yellow-500/50" : ""
-      )}
-    >
-      <div className="flex items-center gap-2 mb-1">
-        <span className="font-bold opacity-70 uppercase tracking-wider text-[9px]">[{log.source}]</span>
-        <span className="opacity-40 ml-auto">{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, second: '2-digit', minute: '2-digit', hour: '2-digit' })}</span>
+  const lastLogId = logs[logs.length - 1]?.id;
+
+  const renderLogItem = (log: LogEntry) => {
+    const isActive = isRunning && log.id === lastLogId;
+    return (
+      <div
+        key={log.id}
+        className={cn(
+          "p-2.5 rounded border leading-relaxed whitespace-pre-wrap transition-all duration-300",
+          log.type === "error" ? "bg-red-50/50 border-red-200 text-red-900 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400" :
+            log.type === "success" ? "bg-emerald-50/50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400" :
+              log.type === "warning" ? "bg-amber-50/50 border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400" :
+                "bg-white border-zinc-200 text-zinc-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300",
+          log.message.includes("Подсказка:") ? "animate-blink-three shadow-md ring-2 ring-yellow-400/50 dark:ring-yellow-500/50" : "",
+          isActive ? "ring-2 ring-blue-500/60 border-blue-400/50 shadow-sm bg-blue-50/30 dark:bg-blue-900/20" : ""
+        )}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          {isActive && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+          )}
+          <span className="font-bold opacity-70 uppercase tracking-wider text-[9px]">[{log.source}]</span>
+          <span className="opacity-40 ml-auto">{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, second: '2-digit', minute: '2-digit', hour: '2-digit' })}</span>
+        </div>
+        {log.message}
       </div>
-      {log.message}
-    </div>
-  );
+    );
+  };
 
   return (
     <aside className="flex flex-col rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] shadow-sm overflow-hidden h-full">
@@ -1069,7 +1160,7 @@ function LogsPanel({ logs, isRunning, runsCount, onClose }: { logs: LogEntry[]; 
           </button>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs">
         {logs.length === 0 && <p className="text-[var(--color-text-secondary)] text-center mt-4">Ожидание запуска...</p>}
 
         {/* Global start logs */}
@@ -1125,42 +1216,47 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
   const router = useRouter();
   const storageKey = useMemo(() => `practice_flow_state_${task.id}`, [task.id]);
 
-  // Load saved state from localStorage immediately (synchronous, no race conditions)
-  const initialNodes = useMemo(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.nodes && parsed.nodes.length > 0) return parsed.nodes;
-      }
-    } catch (e) {}
+  // Default initial state (server-safe)
+  const defaultNodes = useMemo(() => {
     return task.blocks.includes("dataInput") ? [makeNode("dataInput")] : task.blocks.slice(0, 1).map(b => makeNode(b));
-  }, [storageKey]);
+  }, [task.blocks]);
 
-  const initialEdges = useMemo(() => {
+  const [nodes, setNodes, onNodesChange] = useNodesState<PracticeNode>(defaultNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<PracticeEdge>([]);
+
+  const isLoadedRef = useRef(false);
+
+  // Load saved state from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    isLoadedRef.current = false;
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
+        if (parsed.nodes && parsed.nodes.length > 0) {
+          setNodes(parsed.nodes);
+        }
         if (parsed.edges) {
-          return parsed.edges.map((e: any) => {
+          setEdges(parsed.edges.map((e: any) => {
             if (e.sourceHandle === "exit") return { ...e, sourceHandle: "false" };
             return e;
-          });
+          }));
         }
       }
     } catch (e) {}
-    return [];
-  }, [storageKey]);
+    // Need a tiny timeout to ensure React Flow has processed the state update before we enable saving
+    setTimeout(() => {
+      isLoadedRef.current = true;
+    }, 50);
+  }, [storageKey, setNodes, setEdges]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<PracticeNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PracticeEdge>(initialEdges);
   const latestDataRef = useRef({ nodes: [] as PracticeNode[], edges: [] as PracticeEdge[] });
   latestDataRef.current = { nodes: nodes.filter(n => !n.data.isGhost), edges };
 
   // Save on unmount (always captures latest nodes/edges via ref)
   useEffect(() => {
     return () => {
+      if (!isLoadedRef.current) return;
       const { nodes: nodesToSave, edges: edgesToSave } = latestDataRef.current;
       localStorage.setItem(storageKey, JSON.stringify({ nodes: nodesToSave, edges: edgesToSave }));
     };
@@ -1168,12 +1264,13 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
 
   // Keep localStorage in sync when nodes/edges change
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     const nodesToSave = nodes.filter(n => !n.data.isGhost);
     localStorage.setItem(storageKey, JSON.stringify({ nodes: nodesToSave, edges }));
   }, [nodes, edges, storageKey]);
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenMode, setFullscreenMode] = useState<"none" | "card" | "map">("none");
   const [runsCount, setRunsCount] = useState(1);
   const [showLoopHint, setShowLoopHint] = useState(false);
 
@@ -1401,10 +1498,18 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       const isSysPrompt = node.data.type === "systemPrompt" && !node.data.isGhost;
       const isErrorHighlight = showSysPromptError && isSysPrompt;
 
+      let inferredConditionMode = node.data.conditionMode;
+      if (node.data.type === "condition" && ["task-3", "task-4", "task-5", "task-6", "task-7"].includes(task.id)) {
+        if (task.id === "task-3") inferredConditionMode = "file_tools";
+        else inferredConditionMode = "tool_select";
+      }
+
       return {
         ...node,
         data: {
           ...node.data,
+          conditionMode: inferredConditionMode,
+          taskId: task.id,
           onDelete: deleteNode,
           isActiveLoop: loopNodes.has(node.id),
           isActiveStep: node.id === activeNodeId,
@@ -1560,20 +1665,34 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
       result: passed ? task.expectedOutput : "failed",
       feedback,
     });
+
+    fetch("/api/practice/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        taskId: task.id,
+        status: passed ? "passed" : "failed",
+        score: passed ? task.score : 0,
+        lastResult: passed ? task.expectedOutput : "failed"
+      })
+    }).catch(e => console.error("Failed to save progress", e));
   }
 
   return (
     <div className={cn(
-      "grid gap-4 bg-[var(--color-bg)] transition-all",
-      isFullscreen
-        ? "fixed inset-0 z-[100] p-4 lg:grid-cols-[200px_minmax(0,1fr)_280px] h-screen"
-        : "lg:grid-cols-[200px_minmax(0,1fr)_280px]",
-      isFullscreen && tutorialStep === "add_remaining_blocks" && "pl-[240px]",
-      isFullscreen && showPlayHint && "pt-[80px]"
+      "grid gap-4 transition-all",
+      fullscreenMode !== "none"
+        ? fullscreenMode === "map"
+          ? "fixed inset-0 z-[100] bg-zinc-50 dark:bg-zinc-950 flex flex-col h-screen"
+          : "fixed inset-0 z-[100] p-4 bg-[var(--color-bg)] lg:grid-cols-[200px_minmax(0,1fr)_280px] h-screen"
+        : "bg-[var(--color-bg)] lg:grid-cols-[200px_minmax(0,1fr)_280px]",
+      fullscreenMode !== "none" && tutorialStep === "add_remaining_blocks" && "pl-[240px]",
+      fullscreenMode !== "none" && showPlayHint && "pt-[80px]"
     )}>
       <aside className={cn(
         "flex flex-col rounded-lg border border-[var(--color-border)] p-3 max-h-full",
-        tutorialStep ? "overflow-visible z-50" : "overflow-y-auto"
+        tutorialStep ? "overflow-visible z-50" : "overflow-y-auto",
+        fullscreenMode === "map" ? "hidden" : ""
       )}>
         <div className="mb-3 text-xs font-semibold uppercase text-[var(--color-text-secondary)] shrink-0">
           Блоки
@@ -1635,10 +1754,10 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         )}
       </aside>
 
-      <section className="min-w-0 flex flex-col max-h-full">
-        <div className="mb-3 shrink-0 flex flex-col gap-2">
+      <section className="min-w-0 flex flex-col max-h-full flex-1 min-h-0">
+        <div className={cn("mb-3 shrink-0 flex flex-col gap-2", fullscreenMode === "map" ? "hidden" : "")}>
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-3 min-w-0">
               {allTasks.length > 1 ? (
                 <div className="relative min-w-0 max-w-[280px]">
                   <select
@@ -1679,7 +1798,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
               </button>
               <div className="relative">
                 <button
-                  onClick={() => run(runsCount)}
+                  onClick={() => run(!["tutorial-task", "task-2", "task-3", "task-4"].includes(task.id) ? runsCount : 1)}
                   className={cn(
                     "inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium text-white transition-colors",
                     isRunning
@@ -1699,26 +1818,28 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 ml-2">
-                <span className="text-xs text-[var(--color-text-secondary)]">Запусков:</span>
-                <div className="relative inline-block">
-                  <select
-                    value={runsCount}
-                    onChange={(e) => setRunsCount(Number(e.target.value))}
-                    disabled={isRunning}
-                    className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-xs pl-2 pr-6 py-1 outline-none cursor-pointer appearance-none disabled:opacity-50"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-secondary)]" />
+              {!["tutorial-task", "task-2", "task-3", "task-4"].includes(task.id) && (
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-xs text-[var(--color-text-secondary)]">Запусков:</span>
+                  <div className="relative inline-block">
+                    <select
+                      value={runsCount}
+                      onChange={(e) => setRunsCount(Number(e.target.value))}
+                      disabled={isRunning}
+                      className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-xs pl-2 pr-6 py-1 outline-none cursor-pointer appearance-none disabled:opacity-50"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-secondary)]" />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
-          <p className="max-w-3xl text-sm text-[var(--color-text-secondary)] leading-relaxed">
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
             {task.id === "tutorial-task"
               ? "Соберите простой пайплайн для того чтобы нейросеть смогла вызвать чтение входящего email по схеме:"
               : task.id === "task-2"
@@ -1776,15 +1897,22 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         </div>
 
         <div className={cn(
-          "overflow-hidden rounded-lg border border-[var(--color-border)] bg-zinc-50 dark:bg-zinc-950 relative",
-          isFullscreen ? "flex-1 min-h-[400px]" : "h-[620px]"
+          "overflow-hidden relative transition-all",
+          fullscreenMode === "map" 
+            ? "flex-1 rounded-none border-0 bg-transparent min-h-0" 
+            : "rounded-lg border border-[var(--color-border)] bg-zinc-50 dark:bg-zinc-950",
+          fullscreenMode === "card" ? "flex-1 min-h-[400px]" : fullscreenMode === "none" ? "h-[620px]" : ""
         )}>
           <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
+            onClick={() => {
+              if (fullscreenMode === "none") setFullscreenMode("card");
+              else if (fullscreenMode === "card") setFullscreenMode("map");
+              else setFullscreenMode("none");
+            }}
             className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-white text-zinc-500 shadow-sm border border-zinc-200 transition-colors hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
-            aria-label={isFullscreen ? "Свернуть" : "На весь экран"}
+            aria-label={fullscreenMode === "none" ? "На весь экран" : fullscreenMode === "card" ? "Только карта" : "Свернуть"}
           >
-            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            {fullscreenMode === "none" ? <Maximize2 size={16} /> : fullscreenMode === "card" ? <Maximize size={16} /> : <Minimize2 size={16} />}
           </button>
           <ReactFlow
             nodes={visibleNodes}
@@ -1799,6 +1927,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
             deleteKeyCode={["Backspace", "Delete"]}
             connectionRadius={60}
             fitView={false}
+            minZoom={0.15}
             defaultViewport={{ x: 50, y: 50, zoom: 0.75 }}
           >
             <Background color="#334155" gap={18} size={1.2} />
@@ -1864,7 +1993,7 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         </div>
 
         {evaluation && (
-          <div className="mt-4 shrink-0 rounded-lg border border-[var(--color-border)] p-4">
+          <div className={cn("mt-4 shrink-0 rounded-lg border border-[var(--color-border)] p-4", fullscreenMode === "map" ? "hidden" : "")}>
             <div className="flex items-center gap-2">
               {evaluation.passed ? (
                 <CheckCircle2 className="text-emerald-500" size={18} />
@@ -1890,17 +2019,19 @@ export function PracticeTrainer({ task, allTasks = [] }: { task: PracticeTask; a
         )}
       </section>
 
-      {(isRunning || logs.length > 0) ? (
-        <LogsPanel logs={logs} isRunning={isRunning} runsCount={runsCount} onClose={clearLogs} />
-      ) : (
-        <PropertiesPanel
-          selectedNode={selectedNode}
-          nodes={nodes}
-          task={task}
-          showSysPromptError={showSysPromptError}
-          onChangeData={handleNodeDataChange}
-        />
-      )}
+      <div style={{ display: fullscreenMode === "map" ? "none" : "contents" }}>
+        {(isRunning || logs.length > 0) ? (
+          <LogsPanel logs={logs} isRunning={isRunning} runsCount={runsCount} onClose={clearLogs} />
+        ) : (
+          <PropertiesPanel
+            selectedNode={selectedNode}
+            nodes={nodes}
+            task={task}
+            showSysPromptError={showSysPromptError}
+            onChangeData={handleNodeDataChange}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -61,6 +61,9 @@ export interface PracticeTask {
   forbiddenEdges: [PracticeBlockType, PracticeBlockType][];
   expectedOutput: string;
   score: number;
+  allowedSystemPrompts?: string[];
+  allowedSubagentPrompts?: string[];
+  allowedTools?: string[];
 }
 
 export interface PracticeTasksFile {

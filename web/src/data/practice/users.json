@@ -5,9 +5,9 @@
       "telegramUserId": 123456789,
       "status": "member",
       "source": "seed",
-      "lastEventAt": "2026-05-21T00:00:00.000Z",
-      "verifiedMonth": "2026-05",
-      "accessUntil": "2026-06-01T00:00:00.000Z"
+      "lastEventAt": "2026-06-01T00:00:00.000Z",
+      "verifiedMonth": "2026-06",
+      "accessUntil": "2026-07-01T00:00:00.000Z"
     }
   ]
 }

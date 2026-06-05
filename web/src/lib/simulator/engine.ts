@@ -256,6 +256,9 @@ export async function runSimulationEngine(
   // Tutorial specific static validation logic
   // ----------------------------------------------------
   if (taskId === "tutorial-task") {
+    const startNode = nodes.find((n) => n.data?.type === "dataInput");
+    if (startNode) setActiveNodeId(startNode.id);
+    
     addLog("system", "Запуск статической валидации графа (Задача 1)...", "info", 0);
     await wait(800);
     if (isCancelled()) return { passedRuns: 0, runsCount: 1 };
@@ -323,15 +326,16 @@ export async function runSimulationEngine(
   // ----------------------------------------------------
   const scenario = TASK_SCENARIOS[taskId ?? ""];
   if (scenario) {
-    addLog("system", scenario.startLog, "info", 0);
-    await wait(600);
-    if (isCancelled()) return { passedRuns: 0, runsCount: 1 };
-
     const startNode = nodes.find((n) => n.data?.type === "dataInput");
     if (!startNode) {
       addLog("system", "Ошибка: Не найден блок Data Input.", "error", 0);
       return { passedRuns: 0, runsCount: 1 };
     }
+    
+    setActiveNodeId(startNode.id);
+    addLog("system", scenario.startLog, "info", 0);
+    await wait(600);
+    if (isCancelled()) return { passedRuns: 0, runsCount: 1 };
 
     type MemEntry = { role: "system" | "user" | "assistant" | "tool"; content: string; toolName?: string };
 
@@ -619,9 +623,13 @@ export async function runSimulationEngine(
     if (runsCount > 1) {
       addLog("system", `=== Запуск ${runIndex + 1} из ${runsCount} ===`, "info", runIndex);
     }
-    addLog("system", `Старт пайплайна. Обработка нового письма.`, "info", runIndex);
 
     const startNode = nodes.find((n) => n.data?.type === "dataInput");
+    if (startNode) {
+      setActiveNodeId(startNode.id);
+    }
+    
+    addLog("system", `Старт пайплайна. Обработка нового письма.`, "info", runIndex);
     if (!startNode) {
       addLog("system", "Ошибка: Не найден блок Data Input.", "error", runIndex);
       if (runsCount <= 1) {
@@ -725,16 +733,16 @@ export async function runSimulationEngine(
             if (subagentId !== "sub_financial_manager") {
               addLog("subagent", "Финансовый менеджер: неверная роль/инструкция.", "warning", runIndex);
               state.subagentResult = "rejected";
+              state.llmAction = null;
               state.transientBuffer.push({ role: "tool", content: "Субагент: Неверная роль.", toolName: "subagent" });
             } else {
               const canRefund = ((randomCase as any).registeredDaysAgo ?? 99) <= 14;
               if (canRefund) {
                 state.llmAction = "create" as any;
-                forcePort = "true";
                 addLog("subagent", `Финансовый менеджер: Заявка одобрена (срок ${(randomCase as any).registeredDaysAgo} дн. <= 14). Инициирую создание возврата.`, "info", runIndex);
               } else {
                 state.subagentResult = "rejected" as any;
-                forcePort = "false";
+                state.llmAction = null;
                 state.transientBuffer.push({ role: "tool", content: "Субагент: В возврате отказано (срок > 14 дней).", toolName: "subagent" });
                 addLog("subagent", `Финансовый менеджер: В возврате отказано (срок ${(randomCase as any).registeredDaysAgo} дн. > 14). Транзакция не создается.`, "warning", runIndex);
               }
@@ -826,6 +834,8 @@ export async function runSimulationEngine(
               break;
             } else if (fb.toLowerCase().includes("прочитан")) {
               addLog("llm", `Получил результат: "${fb}". Анализирую текст письма...`, "success", runIndex);
+            } else if (taskId === "task-7" && !fb.includes("отправлен") && !fb.includes("удален")) {
+              addLog("llm", `Получил результат: "${fb}". Выбираю следующий шаг...`, "success", runIndex);
             } else {
               state.llmAction = "exit";
               addLog("llm", `Получил результат: "${fb}". Задача выполнена, завершаю цикл.`, "success", runIndex);
@@ -1045,11 +1055,17 @@ export async function runSimulationEngine(
           }
           break;
 
-        case "condition":
-          if (currentNode.data?.conditionMode === "spam_filter") {
+        case "condition": {
+          let mode = currentNode.data?.conditionMode;
+          if (!mode && taskId) {
+            if (taskId === "task-3") mode = "file_tools";
+            else if (["task-4", "task-5", "task-6", "task-7"].includes(taskId)) mode = "tool_select";
+          }
+
+          if (mode === "spam_filter") {
             forcePort = state.subagentResult === "spam" ? "spam" : "not_spam";
             addLog("condition", `Роутер: Переход на ветку ${forcePort === "spam" ? "SPAM" : "LEGIT"}.`, "info", runIndex);
-          } else if (currentNode.data?.conditionMode === "tool_select") {
+          } else if (mode === "tool_select") {
             if (state.llmAction === "exit" || state.llmAction === null) {
               forcePort = "false";
               addLog("condition", "Роутер: Команд нет, переход на ветку EXIT.", "info", runIndex);
@@ -1069,6 +1085,7 @@ export async function runSimulationEngine(
             addLog("condition", `Роутер: Есть команда, переход на ветку ${toolLabel}.`, "info", runIndex);
           }
           break;
+        }
 
         case "dispatcher": {
           const sysNode2 = nodes.find((n: any) => n.data?.type === "systemPrompt");
@@ -1231,7 +1248,7 @@ export async function runSimulationEngine(
         let outgoingEdges = edges.filter((e) => e.source === currentNodeId);
         if (forcePort) {
           const allowed: string[] = [forcePort];
-          if (forcePort === "false") allowed.push("exit", "subagent");
+          if (forcePort === "false") allowed.push("exit");
           if (forcePort === "true") allowed.push("search", "bash", "search_bash", "create", "read", "write", "delete", "subagent");
           if (forcePort === "search_bash") allowed.push("search", "bash");
           if (["search", "bash", "search_bash", "create", "read", "write", "delete", "subagent"].includes(forcePort)) allowed.push("true");

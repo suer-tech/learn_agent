@@ -2,11 +2,59 @@
   "progress": [
     {
       "username": "demo_student",
-      "taskId": "agent-loop-basic",
-      "status": "failed",
-      "score": 0,
-      "lastResult": "graph_validation_failed",
-      "updatedAt": "2026-05-23T13:51:45.913Z"
+      "taskId": "task-5",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "agent_loop_solved",
+      "updatedAt": "2026-06-05T10:44:13.642Z"
+    },
+    {
+      "username": "demo_student",
+      "taskId": "tutorial-task",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "tutorial_solved",
+      "updatedAt": "2026-06-05T10:14:26.463Z"
+    },
+    {
+      "username": "demo_student",
+      "taskId": "task-2",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "task_2_solved",
+      "updatedAt": "2026-06-05T10:15:48.745Z"
+    },
+    {
+      "username": "demo_student",
+      "taskId": "task-3",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "task_3_files_solved",
+      "updatedAt": "2026-06-05T10:17:40.660Z"
+    },
+    {
+      "username": "demo_student",
+      "taskId": "task-4",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "task_prompt_selection_solved",
+      "updatedAt": "2026-06-05T10:35:27.191Z"
+    },
+    {
+      "username": "demo_student",
+      "taskId": "task-6",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "task_4_solved",
+      "updatedAt": "2026-06-05T10:52:11.820Z"
+    },
+    {
+      "username": "demo_student",
+      "taskId": "task-7",
+      "status": "passed",
+      "score": 100,
+      "lastResult": "routing_solved",
+      "updatedAt": "2026-06-05T10:59:17.703Z"
     }
   ]
 }
