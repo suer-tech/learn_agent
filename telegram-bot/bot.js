@@ -1,6 +1,6 @@
 const { Telegraf } = require('telegraf');
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 
@@ -20,21 +20,35 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir);
 }
 
-const db = new sqlite3.Database(path.join(dataDir, 'bot.sqlite'), (err) => {
-  if (err) console.error("Error opening database:", err);
-  else console.log("Database connected.");
-});
+const db = new Database(path.join(dataDir, 'bot.sqlite'));
+console.log("Database connected.");
 
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      telegram_id INTEGER PRIMARY KEY,
-      username TEXT,
-      status TEXT,
-      last_verified_at DATETIME
-    )
-  `);
-});
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    telegram_id INTEGER PRIMARY KEY,
+    username TEXT,
+    status TEXT,
+    last_verified_at DATETIME
+  )
+`);
+
+// Prepare statements for reuse
+const upsertUser = db.prepare(`
+  INSERT INTO users (telegram_id, username, status, last_verified_at) 
+  VALUES (?, ?, ?, datetime('now'))
+  ON CONFLICT(telegram_id) DO UPDATE SET 
+    username = excluded.username,
+    status = excluded.status,
+    last_verified_at = excluded.last_verified_at
+`);
+
+const updateUserStatus = db.prepare(
+  `UPDATE users SET status = ?, last_verified_at = datetime('now') WHERE telegram_id = ?`
+);
+
+const getUserByUsername = db.prepare(
+  `SELECT status FROM users WHERE username = ?`
+);
 
 // Helper to normalize username
 function normalizeUsername(value) {
@@ -54,18 +68,11 @@ bot.on('chat_member', (ctx) => {
 
   if (['member', 'administrator', 'creator', 'restricted'].includes(newStatus)) {
     // User joined or is active
-    db.run(
-      `INSERT INTO users (telegram_id, username, status, last_verified_at) 
-       VALUES (?, ?, ?, datetime('now'))
-       ON CONFLICT(telegram_id) DO UPDATE SET 
-         username = excluded.username,
-         status = excluded.status,
-         last_verified_at = excluded.last_verified_at`,
-      [user.id, normalizeUsername(user.username), newStatus],
-      (err) => {
-        if (err) console.error("DB Error on chat_member join:", err);
-      }
-    );
+    try {
+      upsertUser.run(user.id, normalizeUsername(user.username), newStatus);
+    } catch (err) {
+      console.error("DB Error on chat_member join:", err);
+    }
 
     // Only send greeting if they just joined (transitioned from left/kicked to member)
     const oldStatus = ctx.chatMember.old_chat_member.status;
@@ -76,13 +83,11 @@ bot.on('chat_member', (ctx) => {
     }
   } else if (['left', 'kicked'].includes(newStatus)) {
     // User left the group
-    db.run(
-      `UPDATE users SET status = ?, last_verified_at = datetime('now') WHERE telegram_id = ?`,
-      [newStatus, user.id],
-      (err) => {
-        if (err) console.error("DB Error on chat_member leave:", err);
-      }
-    );
+    try {
+      updateUserStatus.run(newStatus, user.id);
+    } catch (err) {
+      console.error("DB Error on chat_member leave:", err);
+    }
   }
 });
 
@@ -110,11 +115,8 @@ app.get('/verify', (req, res) => {
   username = normalizeUsername(username);
 
   // Check the database
-  db.get(`SELECT status FROM users WHERE username = ?`, [username], (err, row) => {
-    if (err) {
-      console.error("DB Error in /verify:", err);
-      return res.status(500).json({ ok: false, reason: "Database error" });
-    }
+  try {
+    const row = getUserByUsername.get(username);
 
     if (!row) {
       return res.status(404).json({ ok: false, reason: "Пользователь не найден в реестре Telegram-группы." });
@@ -125,7 +127,10 @@ app.get('/verify', (req, res) => {
     } else {
       return res.status(403).json({ ok: false, reason: "Пользователь не числится активным участником группы." });
     }
-  });
+  } catch (err) {
+    console.error("DB Error in /verify:", err);
+    return res.status(500).json({ ok: false, reason: "Database error" });
+  }
 });
 
 app.listen(PORT, () => {

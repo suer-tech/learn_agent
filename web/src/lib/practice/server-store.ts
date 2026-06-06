@@ -108,12 +108,8 @@ export async function checkAccess(usernameValue: string) {
       cache: "no-store",
     });
 
-    if (!response.ok) {
-      console.error("Bot API returned status:", response.status);
-      return { ok: false, reason: "Сервис авторизации временно недоступен." };
-    }
-
     const payload = await response.json();
+
     if (!payload.ok) {
       return { ok: false, reason: payload.reason || "Доступ запрещен." };
     }
