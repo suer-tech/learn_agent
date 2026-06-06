@@ -91,7 +91,9 @@ bot.on('chat_member', (ctx) => {
   }
 });
 
-bot.launch().then(() => console.log("Telegraf bot started via Long Polling"));
+bot.launch({
+  allowedUpdates: ['chat_member', 'message'],
+}).then(() => console.log("Telegraf bot started via Long Polling (with chat_member updates)"));
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
