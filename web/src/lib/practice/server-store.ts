@@ -19,6 +19,12 @@ const PROGRESS_PATH = path.join(DATA_DIR, "progress.json");
 const TASKS_PATH = path.join(DATA_DIR, "tasks.json");
 const SESSION_COOKIE = "practice_username";
 
+// ── Auth toggle ──────────────────────────────────────────────────────
+// Set to `true` to require Telegram group membership verification.
+// When `false`, all visitors get guest access to the practice section.
+const AUTH_ENABLED = false;
+const GUEST_USERNAME = "guest";
+
 export function normalizeUsername(value: string) {
   return value.trim().replace(/^@+/, "").toLowerCase();
 }
@@ -68,6 +74,7 @@ async function writeProgress(data: PracticeProgressFile) {
 }
 
 export async function getCurrentUsername() {
+  if (!AUTH_ENABLED) return GUEST_USERNAME;
   const cookieStore = await cookies();
   const raw = cookieStore.get(SESSION_COOKIE)?.value;
   return raw ? normalizeUsername(raw) : null;
@@ -90,6 +97,11 @@ export async function clearPracticeSession() {
 }
 
 export async function checkAccess(usernameValue: string) {
+  if (!AUTH_ENABLED) {
+    const username = normalizeUsername(usernameValue) || GUEST_USERNAME;
+    await setPracticeSession(username);
+    return { ok: true, username, accessUntil: nextMonthStart() };
+  }
   const username = normalizeUsername(usernameValue);
   const botUrl = process.env.BOT_API_URL;
   const botSecret = process.env.BOT_API_SECRET;
